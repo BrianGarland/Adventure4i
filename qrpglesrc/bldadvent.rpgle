@@ -67,6 +67,7 @@ DCL-S Pos            INT(10);
 DCL-S ReadingDat     IND;
 DCL-S Func           IND;
 DCL-S SkipFunc       IND;
+DCL-S SourceData     CHAR(256);
 DCL-S Start          INT(10);
 DCL-S Statement      CHAR(512);
 DCL-S Success        POINTER;
@@ -921,36 +922,36 @@ Advent = fOpen('./qrpglesrc/advent.rpgle':Options);
 Options = INPUT;
 advent2 = fopen('./rpglesrc/advent2.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent2) <> *NULL;
-    SourceLine.Entry = %TRIMR(Buffer);
-    fputs(SourceLine:Advent);
+    SourceData = Buffer;
+    fputs(SourceData:Advent);
 ENDDO;
 fClose(Advent2);
 
 adventa = fopen('./rpglesrc/adventa.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Adventa) <> *NULL;
-    SourceLine.Entry = %TRIMR(Buffer);
-    fputs(SourceLine:Advent);
+    SourceData = Buffer;
+    fputs(SourceData:Advent);
 ENDDO;
 fClose(Adventa);
 
 advent1 = fopen('./rpglesrc/advent1.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent1) <> *NULL;
-    SourceLine.Entry = %TRIMR(Buffer);
-    fputs(SourceLine:Advent);
+    SourceData = Buffer;
+    fputs(SourceData:Advent);
 ENDDO;
 fClose(Advent1);
 
 adventb = fopen('./rpglesrc/adventb.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Adventb) <> *NULL;
-    SourceLine.Entry = %TRIMR(Buffer);
-    fputs(SourceLine:Advent);
+    SourceData = Buffer;
+    fputs(SourceData:Advent);
 ENDDO;
 fClose(Adventb);
 
 advent3 = fopen('./rpglesrc/advent3.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent3) <> *NULL;
-    SourceLine.Entry = %TRIMR(Buffer);
-    fputs(SourceLine:Advent);
+    SourceData = Buffer;
+    fputs(SourceData:Advent);
 ENDDO;
 fClose(Advent3);
 
@@ -987,7 +988,7 @@ ENDSR;
 //------------------------------------------------------------------------
 DCL-PROC ReadRecord;
     DCL-PI ReadRecord IND;
-        AdventF   CONST;
+        Stream    LIKE(pFILE) CONST;
         Record    CHAR(10000);
         RecordLen INT(10);
         Record#   ZONED(5:0);
@@ -1009,7 +1010,7 @@ DCL-PROC ReadRecord;
 
     IF NOT(BufferFilled);
         CLEAR Buffer;
-        Success = fgets(%ADDR(Buffer):%SIZE(Buffer):AdventF);
+        Success = fgets(%ADDR(Buffer):%SIZE(Buffer):Stream);
         IF Success = *NULL;
             RETURN FALSE;
         ENDIF;
@@ -1031,7 +1032,7 @@ DCL-PROC ReadRecord;
     // Check for continuation records and append them to the main one
     DOW TRUE;
         LastSuccess = Success;
-        Success = fgets(%ADDR(Buffer):%SIZE(Buffer):AdventF);
+        Success = fgets(%ADDR(Buffer):%SIZE(Buffer):Stream);
         IF Success = *NULL;
             CLEAR Buffer;
             BufferFilled = FALSE;
