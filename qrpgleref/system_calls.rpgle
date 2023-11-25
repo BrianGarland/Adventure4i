@@ -9,44 +9,44 @@ DCL-C SYSTEM_SUCCESS 0;
 
 
 DCL-S pFile  POINTER TEMPLATE;
-DCL-S stdin  LIKE(pFile) IMPORT('_C_IFS_STDIN');
-DCL-S stdout LIKE(pFile) IMPORT('_C_IFS_STDOUT');
-DCL-S stderr LIKE(pFile) IMPORT('_C_IFS_STDERR');
+DCL-S stdin  LIKE(pFile) IMPORT('_C_IFS_stdin');
+DCL-S stdout LIKE(pFile) IMPORT('_C_IFS_stdout');
+DCL-S stderr LIKE(pFile) IMPORT('_C_IFS_stderr');
 
 
 
-DCL-PR fopen EXTPROC('_C_IFS_FOPEN') LIKE(pFile);
+DCL-PR fopen LIKE(pFile) EXTPROC('_C_IFS_fopen');
     filename POINTER VALUE OPTIONS(*STRING);
     mode     POINTER VALUE OPTIONS(*STRING);
 END-PR;
 
-DCL-PR fclose INT(10) EXTPROC('_C_IFS_FCLOSE');
+DCL-PR fclose INT(10) EXTPROC('_C_IFS_fclose');
     stream LIKE(pFile) VALUE;
 END-PR;
 
 
 
-DCL-PR fgets POINTER EXTPROC('_C_IFS_FGETS');
+DCL-PR fgets POINTER EXTPROC('_C_IFS_fgets');
     string POINTER VALUE;
     size   INT(10) VALUE;
     stream LIKE(pFile) VALUE;
 END-PR;
 
-DCL-PR fputs INT(10) EXTPROC('_C_IFS_FPUTS');
+DCL-PR fputs INT(10) EXTPROC('_C_IFS_fputs');
     string POINTER VALUE OPTIONS(*STRING);
     stream LIKE(pFile) VALUE;
 END-PR;
 
 
 
-DCL-PR fread UNS(10) EXTPROC('_C_IFS_FREAD');
+DCL-PR fread UNS(10) EXTPROC('_C_IFS_fread');
     data   POINTER VALUE;
     size   UNS(10) VALUE;
     count  UNS(10) VALUE;
     stream LIKE(pFile) VALUE;
 END-PR;
 
-DCL-PR fwrite UNS(10) EXTPROC('_C_IFS_FWRITE');
+DCL-PR fwrite UNS(10) EXTPROC('_C_IFS_fwrite');
     data   POINTER VALUE;
     size   UNS(10) VALUE;
     count  UNS(10) VALUE;
