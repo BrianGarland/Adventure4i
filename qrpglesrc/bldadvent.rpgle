@@ -103,7 +103,7 @@ WriteLine(SourceLine:2);
 
 
 // Open the fortran source code 
-FileName = '/home/brian/adventure/77-03-31_adventure.f';
+FileName = './Original Source/77-03-31_adventure.f';
 Options = INPUT;
 AdventF = fopen(FileName:Options);
 
@@ -871,7 +871,7 @@ fClose(AdventF);
 
 
 // Open the data file
-FileName = '/home/brian/adventure/77-03-31_adventure.dat';
+FileName = './Original Source/77-03-31_adventure.dat';
 Options = INPUT;
 AdventDat = fopen(FileName:Options);
 
