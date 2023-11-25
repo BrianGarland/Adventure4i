@@ -6,7 +6,7 @@ CTL-OPT DFTACTGRP(*NO) BNDDIR('QC2LE');
 DCL-C INPUT 'r, crln=N';
 DCL-C OUTPUT 'w, crln=N';
 
-DCL-DS SourceLine  QUALIFIED;
+DCL-DS SourceLine LEN(256) QUALIFIED;
     // Common to all
     line           ZONED(5:0) POS(1);
     spec           CHAR(1)    POS(6);
@@ -921,31 +921,36 @@ Advent = fOpen('./qrpglesrc/advent.rpgle':Options);
 Options = INPUT;
 advent2 = fopen('./rpglesrc/advent2.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent2) <> *NULL;
-    fputs(SourceData:Advent);
+    SourceLine.Entry = %TRIMR(Buffer);
+    fputs(SourceLine:Advent);
 ENDDO;
 fClose(Advent2);
 
 adventa = fopen('./rpglesrc/adventa.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Adventa) <> *NULL;
-    fputs(SourceData:Advent);
+    SourceLine.Entry = %TRIMR(Buffer);
+    fputs(SourceLine:Advent);
 ENDDO;
 fClose(Adventa);
 
 advent1 = fopen('./rpglesrc/advent1.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent1) <> *NULL;
-    fputs(SourceData:Advent);
+    SourceLine.Entry = %TRIMR(Buffer);
+    fputs(SourceLine:Advent);
 ENDDO;
 fClose(Advent1);
 
 adventb = fopen('./rpglesrc/adventb.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Adventb) <> *NULL;
-    fputs(SourceData:Advent);
+    SourceLine.Entry = %TRIMR(Buffer);
+    fputs(SourceLine:Advent);
 ENDDO;
 fClose(Adventb);
 
 advent3 = fopen('./rpglesrc/advent3.rpgle':Options);
 DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent3) <> *NULL;
-    fputs(SourceData:Advent);
+    SourceLine.Entry = %TRIMR(Buffer);
+    fputs(SourceLine:Advent);
 ENDDO;
 fClose(Advent3);
 
@@ -1068,7 +1073,7 @@ END-PROC;
 //------------------------------------------------------------------------
 DCL-PROC WriteLine;
     DCL-PI WriteLine;
-        SourceData LIKE(SRCDTA) CONST;
+        SourceData CHAR(256) CONST;
         pFile      INT(10) CONST OPTIONS(*NOPASS);
     END-PI;
 
