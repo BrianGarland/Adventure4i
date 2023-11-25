@@ -10,6 +10,7 @@ all: bldadvent.rpgle
 	@echo "Built all"
 
 %.rpgle:
+	system -s "CHGATR OBJ('./qrpglesrc/$*.sqlrpgle') ATR(*CCSID) VALUE(1252)"
 	liblist -a $(BIN_LIB);\
 	system "CRTBNDRPG PGM($(BIN_LIB)/$*) SRCSTMF('./qrpglesrc/$*.rpgle') TEXT('$(NAME)') REPLACE(*YES) DBGVIEW($(DBGVIEW)) TGTRLS($(TGTRLS))"
 
