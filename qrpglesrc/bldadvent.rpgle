@@ -16,23 +16,7 @@
      F                                     RENAME(QRPGSRC:RPGSRC3)
      F                                     USROPN
 
-      /COPY QRPGSRC,vProIFS
-      /COPY QRPGSRC,vProSTDIO
-      /COPY QRPGSRC,vProTool
-
-     D NO              C                   'N'
-     D YES             C                   'Y'
-
-     D FALSE           C                   '0'
-     D TRUE            C                   '1'
-
-     D NULL            C                   x'00'
-
-     D LOWER           C                   'abcdefghijklmnopqrstuvwxyz'
-     D UPPER           C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-     D NUMBER          C                   '0123456789'
-     D SIGNED          C                   '0123456789-'
+      /INCLUDE "../qrpgleref/system_calls.rpgle"
 
      D SourceLine      DS                  QUALIFIED
      D  line                          5S 0 OVERLAY(SourceLine:1)
