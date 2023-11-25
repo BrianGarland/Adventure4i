@@ -1090,11 +1090,11 @@ DCL-PROC WriteLine;
 
     SELECT;
         WHEN File = 1;
-            fputs(SourceData:Advent1);
+            fputs(SourceData:Advent_1);
         WHEN File = 2;
-            fputs(SourceData:Advent2);
+            fputs(SourceData:Advent_2);
         WHEN File = 3;
-            fputs(SourceData:Advent3);
+            fputs(SourceData:Advent_3);
     ENDSL;
 
     RETURN;
