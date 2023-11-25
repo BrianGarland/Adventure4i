@@ -16,7 +16,7 @@
      F                                     RENAME(QRPGSRC:RPGSRC3)
      F                                     USROPN
 
-      /INCLUDE "../qrpgleref/system_calls.rpgle"
+      /INCLUDE "./qrpgleref/system_calls.rpgle"
 
      D SourceLine      DS                  QUALIFIED
      D  line                          5S 0 OVERLAY(SourceLine:1)
