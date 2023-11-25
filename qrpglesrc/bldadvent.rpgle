@@ -89,9 +89,9 @@ DCL-S ZEROS          CHAR(5) INZ('00000');
 
 // Open output files
 Options = OUTPUT;
-advent1 = fopen('qrpglesrc/advent_1.rpgle':Options);
-advent2 = fopen('qrpglesrc/advent_2.rpgle':Options);
-advent3 = fopen('qrpglesrc/advent_3.rpgle':Options);
+Advent_1 = fopen('qrpglesrc/advent_1.rpgle':Options);
+Advent_2 = fopen('qrpglesrc/advent_2.rpgle':Options);
+Advent_3 = fopen('qrpglesrc/advent_3.rpgle':Options);
 
 
 
