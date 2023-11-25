@@ -8,31 +8,31 @@ DCL-C OUTPUT 'w, crln=N';
 
 DCL-DS SourceLine  QUALIFIED;
     // Common to all
-    line           ZONED(5:0) OVERLAY(SOURCELINE:1);
-    spec           CHAR(1)    OVERLAY(SOURCELINE:6);
+    line           ZONED(5:0) POS(1);
+    spec           CHAR(1)    POS(6);
     // Comment
-    comment        CHAR(1)    OVERLAY(SOURCELINE:7);
+    comment        CHAR(1)    POS(7);
     // H-spec
-    cntlEntry      CHAR(80)   OVERLAY(SOURCELINE:8);
+    cntlEntry      CHAR(80)   POS(8);
     // P-spec
-    functionName   CHAR(15)   OVERLAY(SOURCELINE:7);
-    functionBeginEnd CHAR(1)  OVERLAY(SOURCELINE:24);
+    functionName   CHAR(15)   POS(7);
+    functionBeginEnd CHAR(1)  POS(24);
     // D-spec
-    varName        CHAR(15)   OVERLAY(SOURCELINE:7);
-    varType        CHAR(2)    OVERLAY(SOURCELINE:24);
-    varSize        ZONED(4:0) OVERLAY(SOURCELINE:36);
-    varDataType    CHAR(1)    OVERLAY(SOURCELINE:40);
-    varDecPos      CHAR(2)    OVERLAY(SOURCELINE:41);
-    varKeywords    CHAR(40)   OVERLAY(SOURCELINE:44);
+    varName        CHAR(15)   POS(7);
+    varType        CHAR(2)    POS(24);
+    varSize        ZONED(4:0) POS(36);
+    varDataType    CHAR(1)    POS(40);
+    varDecPos      CHAR(2)    POS(41);
+    varKeywords    CHAR(40)   POS(44);
     // C-spec
-    factor1        CHAR(14)   OVERLAY(SOURCELINE:12);
-    opcode         CHAR(10)   OVERLAY(SOURCELINE:26);
-    factor2        CHAR(14)   OVERLAY(SOURCELINE:36);
-    extFactor2     CHAR(45)   OVERLAY(SOURCELINE:36);
-    result         CHAR(14)   OVERLAY(SOURCELINE:50);
-    text           CHAR(80)   OVERLAY(SOURCELINE:9);
+    factor1        CHAR(14)   POS(12);
+    opcode         CHAR(10)   POS(26);
+    factor2        CHAR(14)   POS(36);
+    extFactor2     CHAR(45)   POS(36);
+    result         CHAR(14)   POS(50);
+    text           CHAR(80)   POS(9);
     // Table
-    entry          CHAR(80)   OVERLAY(SOURCELINE:1);
+    entry          CHAR(80)   POS(1);
 END-DS;
 
 DCL-S A              INT(10);
