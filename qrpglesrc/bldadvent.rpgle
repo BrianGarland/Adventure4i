@@ -36,6 +36,7 @@ DCL-DS SourceLine LEN(256) QUALIFIED;
 END-DS;
 
 DCL-S A              INT(10);
+DCL-S Advent         LIKE(PFILE);
 DCL-S Advent1        LIKE(PFILE);
 DCL-S Advent2        LIKE(PFILE);
 DCL-S Advent3        LIKE(PFILE);
