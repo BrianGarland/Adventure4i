@@ -4,7 +4,7 @@ CTL-OPT DFTACTGRP(*NO) BNDDIR('QC2LE');
 /INCLUDE "./qrpgleref/system_calls.rpgle"
 
 DCL-C INPUT 'r, crln=N';
-DCL-C OUTPUT 'w, crln=N';
+DCL-C OUTPUT 'w, ccsid=1208';
 
 DCL-DS SourceLine LEN(256) QUALIFIED;
     // Common to all
@@ -37,11 +37,11 @@ END-DS;
 
 DCL-S A              INT(10);
 DCL-S Advent         LIKE(PFILE);
-DCL-S Advent1        LIKE(PFILE);
-DCL-S Advent2        LIKE(PFILE);
-DCL-S Advent3        LIKE(PFILE);
-DCL-S AdventA        LIKE(PFILE);
-DCL-S AdventB        LIKE(PFILE);
+DCL-S Advent_1       LIKE(PFILE);
+DCL-S Advent_2       LIKE(PFILE);
+DCL-S Advent_3       LIKE(PFILE);
+DCL-S Advent_A       LIKE(PFILE);
+DCL-S Advent_B       LIKE(PFILE);
 DCL-S AdventDat      LIKE(PFILE);
 DCL-S AdventF        LIKE(PFILE);
 DCL-S Adjusted       IND;
@@ -89,9 +89,9 @@ DCL-S ZEROS          CHAR(5) INZ('00000');
 
 // Open output files
 Options = OUTPUT;
-advent1 = fopen('./rpglesrc/advent1.rpgle':Options);
-advent2 = fopen('./rpglesrc/advent2.rpgle':Options);
-advent3 = fopen('./rpglesrc/advent3.rpgle':Options);
+advent1 = fopen('qrpglesrc/advent_1.rpgle':Options);
+advent2 = fopen('qrpglesrc/advent_2.rpgle':Options);
+advent3 = fopen('qrpglesrc/advent_3.rpgle':Options);
 
 
 
@@ -103,7 +103,7 @@ WriteLine(SourceLine:2);
 
 
 // Open the fortran source code 
-FileName = './Original Source/77-03-31_adventure.f';
+FileName = 'Original Source/77-03-31_adventure.f';
 Options = INPUT;
 AdventF = fopen(FileName:Options);
 
@@ -871,7 +871,7 @@ fClose(AdventF);
 
 
 // Open the data file
-FileName = './Original Source/77-03-31_adventure.dat';
+FileName = 'Original Source/77-03-31_adventure.dat';
 Options = INPUT;
 AdventDat = fopen(FileName:Options);
 
@@ -910,51 +910,51 @@ WriteLine(SourceLine:2);
 
 
 // Close the created source files
-fclose(Advent1);
-fclose(Advent2);
-fclose(Advent3);
+fclose(Advent_1);
+fclose(Advent_2);
+fclose(Advent_3);
 
 
 
 // Merge source into a single file 
 Options = OUTPUT;
-Advent = fOpen('./qrpglesrc/advent.rpgle':Options);
+Advent = fOpen('qrpglesrc/advent.rpgle':Options);
 
 Options = INPUT;
-advent2 = fopen('./rpglesrc/advent2.rpgle':Options);
-DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent2) <> *NULL;
+Advent_2 = fopen('qrpglesrc/advent_2.rpgle':Options);
+DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent_2) <> *NULL;
     SourceData = Buffer;
     fputs(SourceData:Advent);
 ENDDO;
-fClose(Advent2);
+fClose(Advent_2);
 
-adventa = fopen('./rpglesrc/adventa.rpgle':Options);
-DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Adventa) <> *NULL;
+Advent_A = fopen('qrpglesrc/advent_a.rpgle':Options);
+DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent_a) <> *NULL;
     SourceData = Buffer;
     fputs(SourceData:Advent);
 ENDDO;
-fClose(Adventa);
+fClose(Advent_A);
 
-advent1 = fopen('./rpglesrc/advent1.rpgle':Options);
-DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent1) <> *NULL;
+Advent_1 = fopen('qrpglesrc/advent_1.rpgle':Options);
+DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent_1) <> *NULL;
     SourceData = Buffer;
     fputs(SourceData:Advent);
 ENDDO;
-fClose(Advent1);
+fClose(Advent_1);
 
-adventb = fopen('./rpglesrc/adventb.rpgle':Options);
-DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Adventb) <> *NULL;
+Advent_B = fopen('qrpglesrc/advent_b.rpgle':Options);
+DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent_B) <> *NULL;
     SourceData = Buffer;
     fputs(SourceData:Advent);
 ENDDO;
-fClose(Adventb);
+fClose(Advent_B);
 
-advent3 = fopen('./rpglesrc/advent3.rpgle':Options);
-DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent3) <> *NULL;
+Advent_3 = fopen('qrpglesrc/advent_3.rpgle':Options);
+DOW fgets(%ADDR(Buffer):%SIZE(Buffer):Advent_3) <> *NULL;
     SourceData = Buffer;
     fputs(SourceData:Advent);
 ENDDO;
-fClose(Advent3);
+fClose(Advent_3);
 
 fCLOSE(Advent);
 
