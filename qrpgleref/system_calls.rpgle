@@ -7,51 +7,63 @@ END-PR;
 DCL-C SYSTEM_SUCCESS 0;
 
 
-
-DCL-S pFile  POINTER TEMPLATE;
-DCL-S stdin  LIKE(pFile) IMPORT('_C_IFS_stdin');
-DCL-S stdout LIKE(pFile) IMPORT('_C_IFS_stdout');
-DCL-S stderr LIKE(pFile) IMPORT('_C_IFS_stderr');
-
-
-
-DCL-PR fopen LIKE(pFile) EXTPROC('_C_IFS_fopen');
-    filename POINTER VALUE OPTIONS(*STRING);
-    mode     POINTER VALUE OPTIONS(*STRING);
+DCL-PR errorifs POINTER EXTPROC('__errno');
 END-PR;
 
-DCL-PR fclose INT(10) EXTPROC('_C_IFS_fclose');
-    stream LIKE(pFile) VALUE;
+DCL-PR strerror POINTER EXTPROC('strerror');
+    error_num INT(10) VALUE;
 END-PR;
 
-
-
-DCL-PR fgets POINTER EXTPROC('_C_IFS_fgets');
-    string POINTER VALUE;
-    size   INT(10) VALUE;
-    stream LIKE(pFile) VALUE;
+DCL-PR open INT(10) EXTPROC('open');
+    ifspath  POINTER VALUE OPTIONS(*STRING);
+    oflag    INT(10) VALUE;
+    mode     UNS(10) VALUE OPTIONS(*NOPASS);
+    codepage UNS(10) VALUE OPTIONS(*NOPASS);
 END-PR;
 
-DCL-PR fputs INT(10) EXTPROC('_C_IFS_fputs');
-    string POINTER VALUE OPTIONS(*STRING);
-    stream LIKE(pFile) VALUE;
+DCL-PR close INT(10) EXTPROC('close');
+    fileds INT(10) VALUE;
 END-PR;
 
-
-
-DCL-PR fread UNS(10) EXTPROC('_C_IFS_fread');
-    data   POINTER VALUE;
-    size   UNS(10) VALUE;
-    count  UNS(10) VALUE;
-    stream LIKE(pFile) VALUE;
+DCL-PR read INT(10) EXTPROC('read');
+    fileds    INT(10) VALUE;
+    buffer    POINTER VALUE;
+    noofbytes UNS(10) VALUE;
 END-PR;
 
-DCL-PR fwrite UNS(10) EXTPROC('_C_IFS_fwrite');
-    data   POINTER VALUE;
-    size   UNS(10) VALUE;
-    count  UNS(10) VALUE;
-    stream LIKE(pFile) VALUE;
+DCL-PR write INT(10) EXTPROC('write');
+    fileds    INT(10) VALUE;
+    buffer    POINTER VALUE;
+    noofbytes UNS(10) VALUE;
 END-PR;
+
+// oflag
+DCL-C O_readonly              1;
+DCL-C O_writeonly             2;
+DCL-C O_readwrite             4;
+DCL-C O_createfileifnotexist  8;
+DCL-C O_exclusivecreate       16;
+DCL-C O_truncateto0bytes      64;
+DCL-C O_appendtofile          256;
+DCL-C O_converttextbycodepage 8388608;
+DCL-C O_openintextmode        16777216;
+
+// mode
+// owner authority
+DCL-C M_readowner    256;
+DCL-C M_writeowner   128;
+DCL-C M_executeowner 64;
+// group authority
+DCL-C M_readgroup    32;
+DCL-C M_writegroup   16;
+DCL-C M_executegroup 8;
+// other people
+DCL-C M_readother    4;
+DCL-C M_writeother   2;
+DCL-C M_executeother 1;
+
+
+
 
 
 
@@ -68,5 +80,8 @@ DCL-C UPPER 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 DCL-C NUMBER '0123456789';
 DCL-C SIGNED '0123456789-';
+
+DCL-C CR   x'0D';
+DCL-C LF   x'25';
 
 
