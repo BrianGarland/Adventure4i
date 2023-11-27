@@ -26,41 +26,44 @@ DCL-PR close INT(10) EXTPROC('close');
 END-PR;
 
 DCL-PR read INT(10) EXTPROC('read');
-    fileds    INT(10) VALUE;
-    buffer    POINTER VALUE;
-    noofbytes UNS(10) VALUE;
+    fileds     INT(10) VALUE;
+    buffer     POINTER VALUE;
+    buffersize UNS(10) VALUE;
 END-PR;
 
 DCL-PR write INT(10) EXTPROC('write');
-    fileds    INT(10) VALUE;
-    buffer    POINTER VALUE;
-    noofbytes UNS(10) VALUE;
+    fileds     INT(10) VALUE;
+    buffer     POINTER VALUE;
+    buffersize UNS(10) VALUE;
 END-PR;
 
 // oflag
-DCL-C O_readonly              1;
-DCL-C O_writeonly             2;
-DCL-C O_readwrite             4;
-DCL-C O_createfileifnotexist  8;
-DCL-C O_exclusivecreate       16;
-DCL-C O_truncateto0bytes      64;
-DCL-C O_appendtofile          256;
-DCL-C O_converttextbycodepage 8388608;
-DCL-C O_openintextmode        16777216;
+DCL-C O_RDONLY   1;
+DCL-C O_WRONLY   2;
+DCL-C O_RDWR     4;
+DCL-C O_CREAT    8;
+DCL-C O_EXCL     16;
+DCL-C O_TRUNC    64;
+DCL-C O_APPEND   256;
+DCL-C O_CODEPAGE 8388608;
+DCL-C O_TEXTDATA 16777216;
 
 // mode
 // owner authority
-DCL-C M_readowner    256;
-DCL-C M_writeowner   128;
-DCL-C M_executeowner 64;
+DCL-C S_IRUSR  256;
+DCL-C S_IWUSR  128;
+DCL-C S_IXUSR  64;
+
 // group authority
-DCL-C M_readgroup    32;
-DCL-C M_writegroup   16;
-DCL-C M_executegroup 8;
+DCL-C S_IRGRP  32;
+DCL-C S_IWGRP  16;
+DCL-C S_IXGRP  8;
+
 // other people
-DCL-C M_readother    4;
-DCL-C M_writeother   2;
-DCL-C M_executeother 1;
+DCL-C S_IROTH  4;
+DCL-C S_IWOTH  2;
+DCL-C S_IXOTH  1;
+
 
 
 

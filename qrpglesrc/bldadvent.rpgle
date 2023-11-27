@@ -88,18 +88,18 @@ DCL-S ZEROS          CHAR(5) INZ('00000');
 
 // Open output files
 path = 'qrpglesrc/advent_1.rpgle';
-oflag = O_writeonly + O_createfileifnotexist;
-mode = M_readowner + M_writeowner + M_executeowner;
+oflag = O_WRONLY + O_CREAT;
+mode = S_IRUSR + S_IWUSR + S_IXUSR;
 Advent_1 = open(%TRIMR(path):oflag:mode);
 
 path = 'qrpglesrc/advent_2.rpgle';
-oflag = O_writeonly + O_createfileifnotexist;
-mode = M_readowner + M_writeowner + M_executeowner;
+oflag = O_WRONLY + O_CREAT;
+mode = S_IRUSR + S_IWUSR + S_IXUSR;
 Advent_2 = open(%TRIMR(path):oflag:mode);
 
 path = 'qrpglesrc/advent_3.rpgle';
-oflag = O_writeonly + O_createfileifnotexist;
-mode = M_readowner + M_writeowner + M_executeowner;
+oflag = O_WRONLY + O_CREAT;
+mode = S_IRUSR + S_IWUSR + S_IXUSR;
 Advent_3 = open(%TRIMR(path):oflag:mode);
 
 
@@ -112,8 +112,8 @@ WriteLine(SourceLine:Advent_2);
 
 
 // Open the fortran source code 
-path = 'Original Source/77-03-31_adventure.f';
-oflag = O_readonly;
+path = 'OriginalSource/77-03-31_adventure.f';
+oflag = O_RDONLY + O_TEXTDATA;
 AdventF = open(%TRIMR(path):oflag);
 
 DOW ReadRecord(AdventF:Buffer:BufferLen:Line#);
@@ -880,8 +880,8 @@ CALLP close(AdventF);
 
 
 // Open the data file
-path = 'Original Source/77-03-31_adventure.dat';
-oflag = O_readonly;
+path = 'OriginalSource/77-03-31_adventure.dat';
+oflag = O_RDONLY + O_TEXTDATA;
 AdventDat = open(%TRIMR(path):oflag);
 
 CLEAR SourceLine;
@@ -927,12 +927,12 @@ CALLP close(Advent_3);
 
 // Merge source into a single file 
 path = 'qrpglesrc/advent.rpgle';
-oflag =  O_writeonly + O_createfileifnotexist;
-mode = M_readowner + M_writeowner + M_executeowner;         
+oflag =  O_WRONLY + O_CREAT;
+mode = S_IRUSR + S_IWUSR + S_IXUSR;         
 Advent = open(%TRIMR(path):oflag:mode);
 
 path = 'qrpglesrc/advent_2.rpgle';
-oflag = O_readonly;
+oflag = O_RDONLY + O_TEXTDATA;
 Advent_2 = open(%TRIMR(path):oflag);
 DOW read(Advent_2:%ADDR(Buffer):%SIZE(Buffer)) > 0;
     SourceData = Buffer;
@@ -941,7 +941,7 @@ ENDDO;
 CALLP close(Advent_2);
 
 path = 'qrpglesrc/advent_A.rpgle';
-oflag = O_readonly;
+oflag = O_RDONLY + O_TEXTDATA;
 Advent_A = open(%TRIMR(path):oflag);
 DOW read(Advent_A:%ADDR(Buffer):%SIZE(Buffer)) > 0;
     SourceData = Buffer;
@@ -950,7 +950,7 @@ ENDDO;
 CALLP close(Advent_A);
 
 path = 'qrpglesrc/advent_1.rpgle';
-oflag = O_readonly;
+oflag = O_RDONLY + O_TEXTDATA;
 Advent_1 = open(%TRIMR(path):oflag);
 DOW read(Advent_1:%ADDR(Buffer):%SIZE(Buffer)) > 0;
     SourceData = Buffer;
@@ -959,7 +959,7 @@ ENDDO;
 CALLP close(Advent_1);
 
 path = 'qrpglesrc/advent_b.rpgle';
-oflag = O_readonly;
+oflag = O_RDONLY + O_TEXTDATA;
 Advent_B = open(%TRIMR(path):oflag);
 DOW read(Advent_B:%ADDR(Buffer):%SIZE(Buffer)) > 0;
     SourceData = Buffer;
@@ -968,7 +968,7 @@ ENDDO;
 CALLP close(Advent_B);
 
 path = 'qrpglesrc/advent_3.rpgle';
-oflag = O_readonly;
+oflag = O_RDONLY + O_TEXTDATA;
 Advent_3 = open(%TRIMR(path):oflag);
 DOW read(Advent_3:%ADDR(Buffer):%SIZE(Buffer)) > 0;
     SourceData = Buffer;
@@ -1018,6 +1018,8 @@ DCL-PROC ReadRecord;
     DCL-S Buffer       CHAR(10000) STATIC;
     DCL-S BufferLen    INT(10);
     DCL-S BufferFilled IND STATIC;
+    DCL-S ErrNo        INT(10) BASED(ErrNoPtr);
+    DCL-S ErrText      CHAR(200);
     DCL-S LastSuccess  INT(10);
     DCL-S Success      INT(10);
     DCL-S Line#        ZONED(5:0) STATIC;
@@ -1032,9 +1034,13 @@ DCL-PROC ReadRecord;
     IF NOT(BufferFilled);
         CLEAR Buffer;
         Success = read(Stream:%ADDR(Buffer):%SIZE(Buffer));
-        IF Success = 0;
-            RETURN FALSE;
-        ENDIF;
+        SELECT;
+            WHEN Success = 0;
+                RETURN FALSE;
+            WHEN Success = -1;
+                ErrNoPtr = errorifs();
+                ErrText = %STR(strerror(ErrNo));    
+        ENDSL;
     ELSE;
         // Success is an int and we want it to be anything but 0
         Success = *HIVAL;
@@ -1054,12 +1060,16 @@ DCL-PROC ReadRecord;
     DOW TRUE;
         LastSuccess = Success;
         Success = read(Stream:%ADDR(Buffer):%SIZE(Buffer));
-        IF Success = 0;
-            CLEAR Buffer;
-            BufferFilled = FALSE;
-            Success = LastSuccess;
-            LEAVE;
-        ENDIF;
+        SELECT;
+            WHEN Success = 0;
+                CLEAR Buffer;
+                BufferFilled = FALSE;
+                Success = LastSuccess;
+                LEAVE;
+            WHEN Success = -1;
+                ErrNoPtr = errorifs();
+                ErrText = %STR(strerror(ErrNo));
+        ENDSL;
         // adjust for some lines not starting with tab
         IF %SUBST(Buffer:1:6) = '      ' 
             AND %SUBST(Buffer:7:1) >= '1' 
