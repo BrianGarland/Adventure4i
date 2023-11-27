@@ -53,6 +53,8 @@ DCL-S EndforNeeded   IND;
 DCL-S EndforTag      CHAR(14);
 DCL-S EndforTagFound IND;
 DCL-S EndifNeeded    IND;
+DCL-S ErrNo          INT(10) BASED(ErrNoPtr);
+DCL-S ErrText        CHAR(200);
 DCL-S FileName       VARCHAR(512);
 DCL-S FunctionName   CHAR(15);
 DCL-S I              INT(10);
@@ -91,16 +93,28 @@ path = 'qrpglesrc/advent_1.rpgle';
 oflag = O_WRONLY + O_CREAT;
 mode = S_IRUSR + S_IWUSR + S_IXUSR;
 Advent_1 = open(%TRIMR(path):oflag:mode);
+IF Advent_1 = -1;
+    ErrNoPtr = errorifs();
+    ErrText = %STR(strerror(ErrNo));    
+ENDIF;
 
 path = 'qrpglesrc/advent_2.rpgle';
 oflag = O_WRONLY + O_CREAT;
 mode = S_IRUSR + S_IWUSR + S_IXUSR;
 Advent_2 = open(%TRIMR(path):oflag:mode);
+IF Advent_2 = -1;
+    ErrNoPtr = errorifs();
+    ErrText = %STR(strerror(ErrNo));    
+ENDIF;
 
 path = 'qrpglesrc/advent_3.rpgle';
 oflag = O_WRONLY + O_CREAT;
 mode = S_IRUSR + S_IWUSR + S_IXUSR;
 Advent_3 = open(%TRIMR(path):oflag:mode);
+IF Advent_3 = -1;
+    ErrNoPtr = errorifs();
+    ErrText = %STR(strerror(ErrNo));    
+ENDIF;
 
 
 
@@ -115,6 +129,10 @@ WriteLine(SourceLine:Advent_2);
 path = 'OriginalSource/77-03-31_adventure.f';
 oflag = O_RDONLY + O_TEXTDATA;
 AdventF = open(%TRIMR(path):oflag);
+IF AdventF = -1;
+    ErrNoPtr = errorifs();
+    ErrText = %STR(strerror(ErrNo));    
+ENDIF;
 
 DOW ReadRecord(AdventF:Buffer:BufferLen:Line#);
 
@@ -1018,8 +1036,6 @@ DCL-PROC ReadRecord;
     DCL-S Buffer       CHAR(10000) STATIC;
     DCL-S BufferLen    INT(10);
     DCL-S BufferFilled IND STATIC;
-    DCL-S ErrNo        INT(10) BASED(ErrNoPtr);
-    DCL-S ErrText      CHAR(200);
     DCL-S LastSuccess  INT(10);
     DCL-S Success      INT(10);
     DCL-S Line#        ZONED(5:0) STATIC;
@@ -1045,8 +1061,7 @@ DCL-PROC ReadRecord;
         // Success is an int and we want it to be anything but 0
         Success = *HIVAL;
     ENDIF;
-    //BufferLen = %SCAN(x'0D2500':Buffer) - 1;
-    BufferLen = %SCAN(x'2500':Buffer) - 1;
+    BufferLen = %SCAN(x'0D25':Buffer) - 1;
     IF BufferLen = -1;
         Record = %TRIMR(Record);
     ELSE;
@@ -1083,8 +1098,7 @@ DCL-PROC ReadRecord;
             AND %SUBST(Buffer:2:1) <= '9' 
             AND (%SUBST(Buffer:3:1) = x'05' 
                  OR %SUBST(Buffer:3:1) = ' ');
-            //BufferLen = %SCAN(x'0D2500':Buffer) - 1;
-            BufferLen = %SCAN(x'2500':Buffer) - 1;
+            BufferLen = %SCAN(x'0D25':Buffer) - 1;
             Record = %TRIMR(Record) + %SUBST(Buffer:4:BufferLen-3);
             Line# = Line# + 1;
             LastSuccess = Success;
