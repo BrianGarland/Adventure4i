@@ -1,3 +1,7 @@
+     H DFTACTGRP(*NO) ACTGRP(*NEW)                  
+
+     D DATA            S             80A   CTDATA PERRCD(1) DIM(1000)   
+
      D S1RCNT          S              5S 0
      D RCNT            S              5S 0
      D TEXT            S             80A   DIM(32767)

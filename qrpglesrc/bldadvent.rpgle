@@ -35,7 +35,6 @@ END-DS;
 DCL-S A              INT(10);
 DCL-S Advent         INT(10);
 DCL-S Advent_1       INT(10);
-DCL-S Advent_2       INT(10);
 DCL-S Advent_3       INT(10);
 DCL-S Advent_A       INT(10);
 DCL-S Advent_B       INT(10);
@@ -88,21 +87,15 @@ DCL-S ZEROS          CHAR(5) INZ('00000');
 
 *INLR = *ON;
 
+system('CHGATR OBJ(''OriginalSource/77-03-31_adventure.f'') ATR(*CCSID) VALUE(819)');
+system('CHGATR OBJ(''OriginalSource/77-03-31_adventure.dat'') ATR(*CCSID) VALUE(819)');
+
 // Open output files
 path = 'qrpglesrc/advent_1.rpgle';
 oflag = O_WRONLY + O_CREAT;
 mode = S_IRUSR + S_IWUSR + S_IXUSR;
 Advent_1 = open(%TRIMR(path):oflag:mode);
 IF Advent_1 = -1;
-    ErrNoPtr = errorifs();
-    ErrText = %STR(strerror(ErrNo));    
-ENDIF;
-
-path = 'qrpglesrc/advent_2.rpgle';
-oflag = O_WRONLY + O_CREAT;
-mode = S_IRUSR + S_IWUSR + S_IXUSR;
-Advent_2 = open(%TRIMR(path):oflag:mode);
-IF Advent_2 = -1;
     ErrNoPtr = errorifs();
     ErrText = %STR(strerror(ErrNo));    
 ENDIF;
@@ -115,13 +108,6 @@ IF Advent_3 = -1;
     ErrNoPtr = errorifs();
     ErrText = %STR(strerror(ErrNo));    
 ENDIF;
-
-
-
-CLEAR SourceLine;
-SourceLine.Spec = 'H';
-SourceLine.cntlEntry = 'DFTACTGRP(*NO) ACTGRP(*NEW)';
-WriteLine(SourceLine:Advent_2);
 
 
 
@@ -906,39 +892,26 @@ CLEAR SourceLine;
 SourceLine.Entry = '**';
 WriteLine(SourceLine:Advent_3);
 
-Count = 0;
 DOW read(AdventDat:%ADDR(Buffer):%SIZE(Buffer)) > 0;
 
-    BufferLen = %SCAN(x'2500':Buffer) - 1;
-    IF BufferLen <> 0;
-        Buffer = %XLATE(x'05':' ':Buffer);
-    ENDIF;
+    Buffer = %XLATE(x'05':' ':Buffer);
+    BufferLen = %SCAN(x'0D25':Buffer);
 
-    IF BufferLen > 0;
+    DOW BufferLen > 0;
         CLEAR SourceLine;
         SourceLine.Entry = %SUBST(Buffer:1:BufferLen);
         WriteLine(SourceLine:Advent_3);
-        Count += 1;
-    ENDIF;
+        Buffer = %SUBST(Buffer:BufferLen+2);
+        BufferLen = %SCAN(x'0D25':Buffer);
+    ENDDO;
 
 ENDDO;
 CALLP close(AdventDat);
-
-CLEAR SourceLine;
-SourceLine.spec = 'D';
-SourceLine.varType = 'S';
-SourceLine.varName = ' DATA';
-SourceLine.varSize = 80;
-SourceLine.varDataType = 'A';
-SourceLine.varKeywords = 'CTDATA PERRCD(1) DIM('
-                               + %CHAR(Count) + ')';
-WriteLine(SourceLine:Advent_2);
 
 
 
 // Close the created source files
 CALLP close(Advent_1);
-CALLP close(Advent_2);
 CALLP close(Advent_3);
 
 
@@ -948,15 +921,6 @@ path = 'qrpglesrc/advent.rpgle';
 oflag =  O_WRONLY + O_CREAT;
 mode = S_IRUSR + S_IWUSR + S_IXUSR;         
 Advent = open(%TRIMR(path):oflag:mode);
-
-path = 'qrpglesrc/advent_2.rpgle';
-oflag = O_RDONLY + O_TEXTDATA;
-Advent_2 = open(%TRIMR(path):oflag);
-DOW read(Advent_2:%ADDR(Buffer):%SIZE(Buffer)) > 0;
-    SourceData = Buffer;
-    CALLP write(Advent:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
-ENDDO;
-CALLP close(Advent_2);
 
 path = 'qrpglesrc/advent_A.rpgle';
 oflag = O_RDONLY + O_TEXTDATA;
@@ -1033,10 +997,10 @@ DCL-PROC ReadRecord;
         Record#   ZONED(5:0);
     END-PI;
 
-    DCL-S Buffer       CHAR(10000) STATIC;
-    DCL-S BufferLen    INT(10);
-    DCL-S BufferFilled IND STATIC;
+    DCL-S Buffer       CHAR(20000) STATIC;
+    DCL-S BufferLen    INT(10) STATIC;
     DCL-S LastSuccess  INT(10);
+    DCL-S LineBreak    INT(10);
     DCL-S Success      INT(10);
     DCL-S Line#        ZONED(5:0) STATIC;
 
@@ -1044,74 +1008,87 @@ DCL-PROC ReadRecord;
     // Line# points to the line number of the input file
     // For continuation lines, only the first line# is returned
 
+    // Clear the return value
     CLEAR Record;
     CLEAR RecordLen;
 
-    IF NOT(BufferFilled);
-        CLEAR Buffer;
+    // If the buffer is empty, read a record
+    IF BufferLen = 0;
         Success = read(Stream:%ADDR(Buffer):%SIZE(Buffer));
-        SELECT;
-            WHEN Success = 0;
-                RETURN FALSE;
-            WHEN Success = -1;
+        IF Success = -1;
+            ErrNoPtr = errorifs();
+            ErrText = %STR(strerror(ErrNo));    
+        ENDIF;    
+        BufferLen = Success;
+        LineBreak = %SCAN(x'0D25':Buffer); 
+    ENDIF;
+
+    // Make sure the buffer is fill
+    IF BufferLen > 0 AND BufferLen < %SIZE(Buffer);
+        LineBreak = %SCAN(x'0D25':Buffer); 
+        // Skip blank lines
+        DOW LineBreak = 1;
+            Buffer = %SUBST(Buffer:3);
+            BufferLen -= 2;
+            LineBreak = %SCAN(x'0D25':Buffer); 
+        ENDDO;
+        DOW LineBreak = 0 AND Success > 0;
+            Success = read(Stream:%ADDR(Buffer)+BufferLen:%SIZE(Buffer)-BufferLen);
+            IF Success = -1;
                 ErrNoPtr = errorifs();
                 ErrText = %STR(strerror(ErrNo));    
-        ENDSL;
-    ELSE;
-        // Success is an int and we want it to be anything but 0
-        Success = *HIVAL;
+            ELSEIF Success > 0;
+                BufferLen += Success;
+                LineBreak = %SCAN(x'0D25':Buffer); 
+            ENDIF;    
+        ENDDO;
     ENDIF;
-    BufferLen = %SCAN(x'0D25':Buffer) - 1;
-    IF BufferLen = -1;
+
+    // Extract the first record from the buffer
+    IF LineBreak < 1;
         Record = %TRIMR(Record);
     ELSE;
-        Record = %TRIMR(Record) + %SUBST(Buffer:1:BufferLen);
+        Record = %TRIMR(Record) + %SUBST(Buffer:1:LineBreak-1);
     ENDIF;
-
     Line# = Line# + 1;
     Record# = Line#;
+    // Adjust the buffer
+    Buffer = %SUBST(Buffer:LineBreak+2);
+    BufferLen -= (LineBreak + 1);
 
-    // Check for continuation records and append them to the main one
+    // Check for continuation line and append them to the main one
     DOW TRUE;
-        LastSuccess = Success;
-        Success = read(Stream:%ADDR(Buffer):%SIZE(Buffer));
-        SELECT;
-            WHEN Success = 0;
-                CLEAR Buffer;
-                BufferFilled = FALSE;
-                Success = LastSuccess;
-                LEAVE;
-            WHEN Success = -1;
-                ErrNoPtr = errorifs();
-                ErrText = %STR(strerror(ErrNo));
-        ENDSL;
-        // adjust for some lines not starting with tab
         IF %SUBST(Buffer:1:6) = '      ' 
             AND %SUBST(Buffer:7:1) >= '1' 
             AND %SUBST(Buffer:7:1) <= '9' 
             AND (%SUBST(Buffer:8:1) = x'05' 
                  OR %SUBST(Buffer:8:1) = ' ');
+            // If line starts with 6 spaces, conver that to a tab
+            // to simplify the next test
             Buffer = x'05' + %SUBST(Buffer:7);
+            BufferLen -= 5;
         ENDIF;
         IF %SUBST(Buffer:1:1) = x'05' 
             AND %SUBST(Buffer:2:1) >= '1' 
             AND %SUBST(Buffer:2:1) <= '9' 
             AND (%SUBST(Buffer:3:1) = x'05' 
                  OR %SUBST(Buffer:3:1) = ' ');
-            BufferLen = %SCAN(x'0D25':Buffer) - 1;
-            Record = %TRIMR(Record) + %SUBST(Buffer:4:BufferLen-3);
+            // We have a continuation line
+            LineBreak = %SCAN(x'0D25':Buffer);
+            Record = %TRIMR(Record) + %SUBST(Buffer:4:LineBreak-1);
             Line# = Line# + 1;
-            LastSuccess = Success;
+            // Adjust the buffer
+            Buffer = %SUBST(Buffer:LineBreak+2);
+            BufferLen -= (LineBreak + 1);
+            ITER;
         ELSE;
-            BufferFilled = TRUE;
-            Success = LastSuccess;
-            LEAVE;
+            LEAVE;    
         ENDIF;
     ENDDO;
 
     RecordLen = %LEN(%TRIMR(Record));
 
-    RETURN TRUE;
+    RETURN (RecordLen > 0);
 
 END-PROC;
 
