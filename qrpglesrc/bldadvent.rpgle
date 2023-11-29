@@ -34,15 +34,13 @@ END-DS;
 
 DCL-S A              INT(10);
 DCL-S Advent         INT(10);
-DCL-S Advent_1       INT(10);
-DCL-S Advent_3       INT(10);
 DCL-S Advent_A       INT(10);
 DCL-S Advent_B       INT(10);
-DCL-S AdventDat      INT(10);
-DCL-S AdventF        INT(10);
+DCL-S Advent_Dat     INT(10);
+DCL-S Advent_F       INT(10);
 DCL-S Adjusted       IND;
 DCL-S B              INT(10);
-DCL-S Buffer         CHAR(10000);
+DCL-S Buffer         CHAR(25000);
 DCL-S BufferLen      INT(10);
 DCL-S C              INT(10);
 DCL-S Count          INT(10);
@@ -71,7 +69,7 @@ DCL-S SkipFunc       IND;
 DCL-S SourceData     CHAR(256);
 DCL-S Start          INT(10);
 DCL-S Statement      CHAR(512);
-DCL-S Success        POINTER;
+DCL-S Success        INT(10);
 DCL-S Tab            INT(10);
 DCL-S Tag            CHAR(14);
 DCL-S Tags           CHAR(14) DIM(50);
@@ -87,40 +85,64 @@ DCL-S ZEROS          CHAR(5) INZ('00000');
 
 *INLR = *ON;
 
+// Make sure the old fortran code has the correct CCSID
 system('CHGATR OBJ(''OriginalSource/77-03-31_adventure.f'') ATR(*CCSID) VALUE(819)');
 system('CHGATR OBJ(''OriginalSource/77-03-31_adventure.dat'') ATR(*CCSID) VALUE(819)');
 
-// Open output files
-path = 'qrpglesrc/advent_1.rpgle';
+// Make sure the prewritten RPGLE code has the correct CCSID
+system('CHGATR OBJ(''qrpglesrc/advent_a.rpgle'') ATR(*CCSID) VALUE(819)');
+system('CHGATR OBJ(''qrpglesrc/advent_b.rpgle'') ATR(*CCSID) VALUE(819)');
+
+
+
+// Open output file
+path = 'qrpglesrc/advent.rpgle';
 oflag = O_WRONLY + O_CREAT;
 mode = S_IRUSR + S_IWUSR + S_IXUSR;
-Advent_1 = open(%TRIMR(path):oflag:mode);
-IF Advent_1 = -1;
+Advent = open(%TRIMR(path):oflag:mode);
+IF Advent = -1;
     ErrNoPtr = errorifs();
     ErrText = %STR(strerror(ErrNo));    
 ENDIF;
 
-path = 'qrpglesrc/advent_3.rpgle';
-oflag = O_WRONLY + O_CREAT;
-mode = S_IRUSR + S_IWUSR + S_IXUSR;
-Advent_3 = open(%TRIMR(path):oflag:mode);
-IF Advent_3 = -1;
+
+
+// Write the header
+path = 'qrpglesrc/advent_a.rpgle';
+oflag = O_RDONLY + O_TEXTDATA;
+Advent_A = open(%TRIMR(path):oflag);
+IF Advent_A = -1;
     ErrNoPtr = errorifs();
     ErrText = %STR(strerror(ErrNo));    
 ENDIF;
 
+DOW TRUE;
+    Success = read(Advent_A:%ADDR(Buffer):%SIZE(Buffer));
+    SELECT;
+        WHEN Success = -1;
+            ErrNoPtr = errorifs();
+            ErrText = %STR(strerror(ErrNo));    
+        WHEN Success = 0;
+            LEAVE;
+        OTHER;
+            CALLP write(Advent:%ADDR(Buffer):Success);
+    ENDSL;
+ENDDO;
+
+CALLP close(Advent_A);
 
 
-// Open the fortran source code 
+
+// Convert the fortran source code to RPGLE and write it out
 path = 'OriginalSource/77-03-31_adventure.f';
 oflag = O_RDONLY + O_TEXTDATA;
-AdventF = open(%TRIMR(path):oflag);
-IF AdventF = -1;
+Advent_F = open(%TRIMR(path):oflag);
+IF Advent_F = -1;
     ErrNoPtr = errorifs();
     ErrText = %STR(strerror(ErrNo));    
 ENDIF;
 
-DOW ReadRecord(AdventF:Buffer:BufferLen:Line#);
+DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
 
     Adjusted = FALSE;
 
@@ -341,8 +363,8 @@ DOW ReadRecord(AdventF:Buffer:BufferLen:Line#);
                 CLEAR SourceLine;
                 SourceLine.Line = line#;
                 SourceLine.spec = 'C';
-                // just comment out calls to GETIN for now
-                IF %SCAN('GETIN(':Buffer) > 0;
+                // just comment out calls to SHIFT and GETIN for now
+                IF %SCAN('SHIFT(':Buffer) > 0 OR %SCAN('GETIN(':Buffer) > 0;
                     SourceLine.Comment = '*';
                     SourceLine.Text = '==== ' + Buffer;
                     WriteLine(SourceLine);
@@ -530,7 +552,8 @@ DOW ReadRecord(AdventF:Buffer:BufferLen:Line#);
                 Buffer = '';
                 EXSR CheckForEnd;
                 InFunc = TRUE;
-                SkipFunc = (FunctionName = 'GETIN'
+                SkipFunc = (FunctionName = 'SPEAK'
+                                    OR FunctionName = 'GETIN'
                                     OR FunctionName = 'SHIFT');
 
 
@@ -876,95 +899,78 @@ DOW ReadRecord(AdventF:Buffer:BufferLen:Line#);
 
 ENDDO;
 
-CALLP close(AdventF);
+CALLP close(Advent_F);
 
 
 
+// Write the procedures
+path = 'qrpglesrc/advent_b.rpgle';
+oflag = O_RDONLY + O_TEXTDATA;
+Advent_B = open(%TRIMR(path):oflag);
+IF Advent_B = -1;
+    ErrNoPtr = errorifs();
+    ErrText = %STR(strerror(ErrNo));    
+ENDIF;
+
+DOW TRUE;
+    Success = read(Advent_B:%ADDR(Buffer):%SIZE(Buffer));
+    SELECT;
+        WHEN Success = -1;
+            ErrNoPtr = errorifs();
+            ErrText = %STR(strerror(ErrNo));    
+        WHEN Success = 0;
+            LEAVE;
+        OTHER;
+            CALLP write(Advent:%ADDR(Buffer):Success);
+    ENDSL;
+ENDDO;
+
+CALLP close(Advent_B);
 
 
 
-// Open the data file
+// Write the map data
 path = 'OriginalSource/77-03-31_adventure.dat';
 oflag = O_RDONLY + O_TEXTDATA;
-AdventDat = open(%TRIMR(path):oflag);
+Advent_Dat = open(%TRIMR(path):oflag);
 
+Count = 0;
 CLEAR SourceLine;
 SourceLine.Entry = '**';
-WriteLine(SourceLine:Advent_3);
+WriteLine(SourceLine);
 
-DOW read(AdventDat:%ADDR(Buffer):%SIZE(Buffer)) > 0;
+DOW read(Advent_Dat:%ADDR(Buffer):%SIZE(Buffer)) > 0;
 
     Buffer = %XLATE(x'05':' ':Buffer);
     BufferLen = %SCAN(x'0D25':Buffer);
 
     DOW BufferLen > 0;
         CLEAR SourceLine;
-        SourceLine.Entry = %SUBST(Buffer:1:BufferLen);
-        WriteLine(SourceLine:Advent_3);
+        SourceLine.Entry = %SUBST(Buffer:1:BufferLen-1);
+        IF SourceLine.Entry <> *BLANKS;
+            WriteLine(SourceLine);
+            Count += 1;
+        ENDIF;
         Buffer = %SUBST(Buffer:BufferLen+2);
         BufferLen = %SCAN(x'0D25':Buffer);
     ENDDO;
 
 ENDDO;
-CALLP close(AdventDat);
+CALLP close(Advent_Dat);
 
 
 
-// Close the created source files
-CALLP close(Advent_1);
-CALLP close(Advent_3);
-
-
-
-// Merge source into a single file 
-path = 'qrpglesrc/advent.rpgle';
-oflag =  O_WRONLY + O_CREAT;
-mode = S_IRUSR + S_IWUSR + S_IXUSR;         
-Advent = open(%TRIMR(path):oflag:mode);
-
-path = 'qrpglesrc/advent_A.rpgle';
-oflag = O_RDONLY + O_TEXTDATA;
-Advent_A = open(%TRIMR(path):oflag);
-DOW read(Advent_A:%ADDR(Buffer):%SIZE(Buffer)) > 0;
-    SourceData = Buffer;
-    CALLP write(Advent:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
-ENDDO;
-CALLP close(Advent_A);
-
-path = 'qrpglesrc/advent_1.rpgle';
-oflag = O_RDONLY + O_TEXTDATA;
-Advent_1 = open(%TRIMR(path):oflag);
-DOW read(Advent_1:%ADDR(Buffer):%SIZE(Buffer)) > 0;
-    SourceData = Buffer;
-    CALLP write(Advent:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
-ENDDO;
-CALLP close(Advent_1);
-
-path = 'qrpglesrc/advent_b.rpgle';
-oflag = O_RDONLY + O_TEXTDATA;
-Advent_B = open(%TRIMR(path):oflag);
-DOW read(Advent_B:%ADDR(Buffer):%SIZE(Buffer)) > 0;
-    SourceData = Buffer;
-    CALLP write(Advent:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
-ENDDO;
-CALLP close(Advent_B);
-
-path = 'qrpglesrc/advent_3.rpgle';
-oflag = O_RDONLY + O_TEXTDATA;
-Advent_3 = open(%TRIMR(path):oflag);
-DOW read(Advent_3:%ADDR(Buffer):%SIZE(Buffer)) > 0;
-    SourceData = Buffer;
-    CALLP write(Advent:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
-ENDDO;
-CALLP close(Advent_3);
-
+// Close the created source file
 CALLP close(Advent);
+
+
 
 RETURN;
 
 
 
 
+//------------------------------------------------------------------------
 BEGSR CheckForEnd;
 
     IF EndifNeeded;
@@ -1075,7 +1081,7 @@ DCL-PROC ReadRecord;
                  OR %SUBST(Buffer:3:1) = ' ');
             // We have a continuation line
             LineBreak = %SCAN(x'0D25':Buffer);
-            Record = %TRIMR(Record) + %SUBST(Buffer:4:LineBreak-1);
+            Record = %TRIMR(Record) + %SUBST(Buffer:4:LineBreak-4);
             Line# = Line# + 1;
             // Adjust the buffer
             Buffer = %SUBST(Buffer:LineBreak+2);
@@ -1097,20 +1103,10 @@ END-PROC;
 DCL-PROC WriteLine;
     DCL-PI WriteLine;
         SourceData CHAR(256) VALUE;
-        pHandle    INT(10) CONST OPTIONS(*NOPASS);
     END-PI;
 
-    DCL-S Handle INT(10);
-
-
-    IF %PARMS >= %PARMNUM(pHandle);
-        Handle = pHandle;
-    ELSE;
-        Handle = Advent_1;
-    ENDIF;
-
     SourceData = %TRIMR(SourceData) + CR + LF;
-    CALLP write(Handle:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
+    CALLP write(Advent:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
 
     RETURN;
 
