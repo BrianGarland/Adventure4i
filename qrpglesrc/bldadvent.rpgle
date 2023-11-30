@@ -42,6 +42,7 @@ DCL-S Adjusted       IND;
 DCL-S B              INT(10);
 DCL-S Buffer         CHAR(25000);
 DCL-S BufferLen      INT(10);
+DCL-S Buffer2        CHAR(25000) CCSID(819);
 DCL-S C              INT(10);
 DCL-S Count          INT(10);
 DCL-S Dims           CHAR(10) DIM(50);
@@ -63,9 +64,7 @@ DCL-S oflag          INT(10);
 DCL-S Paren          INT(10);
 DCL-S path           CHAR(512);
 DCL-S Pos            INT(10);
-DCL-S ReadingDat     IND;
-DCL-S Func           IND;
-DCL-S SkipFunc       IND;
+DCL-S SkipSection    IND;
 DCL-S SourceData     CHAR(256);
 DCL-S Start          INT(10);
 DCL-S Statement      CHAR(512);
@@ -97,9 +96,9 @@ system('CHGATR OBJ(''qrpglesrc/advent_b.rpgle'') ATR(*CCSID) VALUE(819)');
 
 // Open output file
 path = 'qrpglesrc/advent.rpgle';
-oflag = O_WRONLY + O_CREAT;
+oflag = O_WRONLY + O_CREAT + O_CCSID + O_TEXTDATA + O_TEXT_CREAT;
 mode = S_IRUSR + S_IWUSR + S_IXUSR;
-Advent = open(%TRIMR(path):oflag:mode);
+Advent = open(%TRIMR(path):oflag:mode:ASCII:ASCII);
 IF Advent = -1;
     ErrNoPtr = errorifs();
     ErrText = %STR(strerror(ErrNo));    
@@ -125,7 +124,8 @@ DOW TRUE;
         WHEN Success = 0;
             LEAVE;
         OTHER;
-            CALLP write(Advent:%ADDR(Buffer):Success);
+            Buffer2 = Buffer;
+            CALLP write(Advent:%ADDR(Buffer2):Success);
     ENDSL;
 ENDDO;
 
@@ -211,11 +211,11 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     WriteLine(SourceLine);
                     IF %SUBST(BUFFER:1:tab-1) = '1002';
                         // start reading .dat file
-                        ReadingDat = TRUE;
+                        SkipSection = TRUE;
                     ENDIF;
                     IF %SUBST(BUFFER:1:tab-1) = '1100';
                         // done reading .dat file
-                        ReadingDat = FALSE;
+                        SkipSection = FALSE;
                     ENDIF;
                 ELSE;
                     CLEAR SourceLine;
@@ -231,7 +231,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
 
             // In the setup routine
             // Just skip all these lines as they are handled in IFILE
-            WHEN ReadingDat;
+            WHEN SkipSection;
                 SourceLine.Line = line#;
                 SourceLine.Comment = '*';
                 SourceLine.Text = '==== ' + Buffer;
@@ -457,7 +457,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
             WHEN %SUBST(Buffer:1:4) = x'05' + 'DO ';
                 CLEAR SourceLine;
                 SourceLine.Line = line#;
-                IF SkipFunc;
+                IF SkipSection;
                     SourceLine.Comment = '*';
                     SourceLine.Text = '==== ' + Buffer;
                     WriteLine(SourceLine);
@@ -520,41 +520,50 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 ELSE;
                     FunctionName = %SUBST(Buffer:13);
                 ENDIF;
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'P';
-                SourceLine.functionName = ' ' + FunctionName;
-                SourceLine.functionBeginEnd = 'B';
-                WriteLine(SourceLine);
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'D';
-                SourceLine.varName = ' ' + FunctionName;
-                SourceLine.varType = 'PI';
-                WriteLine(SourceLine);
-                FOR I = 1 TO Count;
-                    CLEAR SourceLine;
-                    SourceLine.Line = Line#;
-                    SourceLine.spec = 'D';
-                    SourceLine.varName = '  ' + Vars(i);
-                    IF FunctionName = 'GETIN' AND I >= 2;
-                        SourceLine.varSize = 5;
-                        SourceLine.varDataType = 'A';
-                        SourceLine.varDecPos = *BLANKS;
-                    ELSE;
-                        SourceLine.varSize = 10;
-                        SourceLine.varDataType = 'I';
-                        SourceLine.varDecPos = '00';
-                    ENDIF;
-                    SourceLine.varKeywords = 'VALUE';
+                IF (FunctionName = 'SPEAK'
+                                    OR FunctionName = 'GETIN'
+                                    OR FunctionName = 'SHIFT');
+                    SkipSection = TRUE;
+                    SourceLine.Line = line#;
+                    SourceLine.Comment = '*';
+                    SourceLine.Text = '==== ' + Buffer;
                     WriteLine(SourceLine);
-                ENDFOR;
+                    Buffer = '';
+                ELSE;
+                    SkipSection = FALSE;
+                    CLEAR SourceLine;
+                    SourceLine.line = line#;
+                    SourceLine.spec = 'P';
+                    SourceLine.functionName = ' ' + FunctionName;
+                    SourceLine.functionBeginEnd = 'B';
+                    WriteLine(SourceLine);
+                    CLEAR SourceLine;
+                    SourceLine.line = line#;
+                    SourceLine.spec = 'D';
+                    SourceLine.varName = ' ' + FunctionName;
+                    SourceLine.varType = 'PI';
+                    WriteLine(SourceLine);
+                    FOR I = 1 TO Count;
+                        CLEAR SourceLine;
+                        SourceLine.Line = Line#;
+                        SourceLine.spec = 'D';
+                        SourceLine.varName = '  ' + Vars(i);
+                        IF FunctionName = 'GETIN' AND I >= 2;
+                            SourceLine.varSize = 5;
+                            SourceLine.varDataType = 'A';
+                            SourceLine.varDecPos = *BLANKS;
+                        ELSE;
+                            SourceLine.varSize = 10;
+                            SourceLine.varDataType = 'I';
+                            SourceLine.varDecPos = '00';
+                        ENDIF;
+                        SourceLine.varKeywords = 'VALUE';
+                        WriteLine(SourceLine);
+                    ENDFOR;
+                ENDIF;    
                 Buffer = '';
                 EXSR CheckForEnd;
                 InFunc = TRUE;
-                SkipFunc = (FunctionName = 'SPEAK'
-                                    OR FunctionName = 'GETIN'
-                                    OR FunctionName = 'SHIFT');
 
 
             // LOGICAL FUNCTION
@@ -639,6 +648,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     SourceLine.functionBeginEnd = 'E';
                     WriteLine(SourceLine);
                     InFunc = FALSE;
+                    SkipSection = FALSE;
                 ENDIF;
                 Buffer = '';
 
@@ -868,7 +878,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 CLEAR SourceLine;
                 SourceLine.Line = line#;
 
-                IF SkipFunc;
+                IF SkipSection;
                     SourceLine.Comment = '*';
                     SourceLine.Text = '==== ' + Buffer;
                     WriteLine(SourceLine);
@@ -921,7 +931,8 @@ DOW TRUE;
         WHEN Success = 0;
             LEAVE;
         OTHER;
-            CALLP write(Advent:%ADDR(Buffer):Success);
+            Buffer2 = Buffer;
+            CALLP write(Advent:%ADDR(Buffer2):Success);
     ENDSL;
 ENDDO;
 
@@ -962,6 +973,11 @@ CALLP close(Advent_Dat);
 
 // Close the created source file
 CALLP close(Advent);
+
+
+
+// Trigger a compile
+system('CRTBNDRPG PGM(ADVENT) SRCSTMF(''qrpglesrc/advent.rpgle'') DBGVIEW(*ALL)');
 
 
 
@@ -1105,8 +1121,11 @@ DCL-PROC WriteLine;
         SourceData CHAR(256) VALUE;
     END-PI;
 
+    DCL-S AsciiText CHAR(256) CCSID(819);
+
     SourceData = %TRIMR(SourceData) + CR + LF;
-    CALLP write(Advent:%ADDR(SourceData):%LEN(%TRIMR(SourceData)));
+    AsciiText = SourceData;
+    CALLP write(Advent:%ADDR(AsciiText):%LEN(%TRIMR(AsciiText)));
 
     RETURN;
 
