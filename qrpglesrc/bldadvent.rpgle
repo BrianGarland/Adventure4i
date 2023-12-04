@@ -229,14 +229,17 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     EndforTagFound = *ON;
                 ENDIF;
 
-            // In the setup routine
-            // Just skip all these lines as they are handled in IFILE
+            // In the setup routine - skip all these lines as they are handled in IFILE
+            // In a subroutine that we are skipping
             WHEN SkipSection;
                 SourceLine.Line = line#;
                 SourceLine.Comment = '*';
                 SourceLine.Text = '==== ' + Buffer;
                 WriteLine(SourceLine);
                 Buffer = '';
+                IF %SUBST(Buffer:1:5) = x'05' + 'END ';
+                    SkipSection = FALSE;
+                ENDIF;
 
             // IF 
             // IF(DIST)10,20,30

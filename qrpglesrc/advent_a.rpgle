@@ -1,5 +1,11 @@
      H DFTACTGRP(*NO) ACTGRP(*NEW)                  
 
+     D TYPE            PR
+     D  Message                    1024A   CONST
+
+     D ACCEPT          PR            80A
+
+
      D DATA            S             80A   CTDATA PERRCD(1) DIM(1000)   
 
      D S1RCNT          S              5S 0

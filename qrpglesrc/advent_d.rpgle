@@ -50,8 +50,8 @@
      D HistoryLines    S              5U 0 INZ(0)
 
 
-
-     P TYPE            B
+      //------------------------------------------------------------------------------------------   
+     P TYPE            B                   EXPORT
      D TYPE            PI
      D  Message                    1024A   CONST
 
@@ -92,7 +92,8 @@
 
 
 
-     P ACCEPT          B
+      //------------------------------------------------------------------------------------------   
+     P ACCEPT          B                   EXPORT
      D ACCEPT          PI            80A
 
        IF NOT(%OPEN(ADVENTFM));
