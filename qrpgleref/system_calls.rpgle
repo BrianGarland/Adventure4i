@@ -74,10 +74,6 @@ DCL-C S_IXOTH  1;
 
 
 
-
-DCL-C NO  'N';
-DCL-C YES 'Y';
-
 DCL-C FALSE '0';
 DCL-C TRUE  '1';
 

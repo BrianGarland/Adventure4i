@@ -14,6 +14,8 @@
      D #PAGEUP         C                   X'F4'                                Page Up
      D #PAGEDOWN       C                   X'F5'                                Page Down
 
+     D Offset          C                   2
+
      D DSPFDS          DS
      D  FKey                          1A   OVERLAY(DSPFDS:369)
 
@@ -52,6 +54,7 @@
 
       //------------------------------------------------------------------------------------------   
      P TYPE            B                   EXPORT
+      //------------------------------------------------------------------------------------------   
      D TYPE            PI
      D  Message                    1024A   CONST
 
@@ -69,6 +72,7 @@
            SELECT;
            WHEN %LEN(WorkMsg) <= BufferSize;
                Buffer = WorkMsg;
+               WorkMsg = *BLANKS;
            WHEN %LEN(WorkMsg) > BufferSize
                AND (%SUBST(WorkMsg:BufferSize:1) = *BLANK
                     OR %SUBST(WorkMsg:BufferSize+1:1) = *BLANK);
@@ -94,6 +98,7 @@
 
       //------------------------------------------------------------------------------------------   
      P ACCEPT          B                   EXPORT
+      //------------------------------------------------------------------------------------------   
      D ACCEPT          PI            80A
 
        IF NOT(%OPEN(ADVENTFM));
@@ -104,7 +109,7 @@
 
        DOW 1=1;
 
-           WRITE S1;
+           ShowScreen();
            EXFMT S2;
 
            SELECT;
@@ -147,12 +152,42 @@
 
 
 
+
+      //------------------------------------------------------------------------
+     P ShowScreen      B
+      //------------------------------------------------------------------------
+     D ShowScreen      PI
+
+     D i               S             10I 0
+     D j               S             10I 0
+
+
+        j = 0;
+        CLEAR Line;
+        IF CurrentLine > 0;
+            FOR i = CurrentLine TO HistoryLines;
+                IF j >= %ELEM(Line);
+                    sln = 0;
+                    LEAVE;
+                ENDIF;
+                j += 1;
+                Line(j) = History(i);
+                sln = j + Offset;
+            ENDFOR;
+        ELSE;
+            sln = Offset;
+        ENDIF;
+
+     P ShowScreen      E
+
+
+
+
       //------------------------------------------------------------------------
      P FindBottom      B
       //------------------------------------------------------------------------
      D FindBottom      PI
 
-      /FREE
 
        IF HistoryLines > %ELEM(Line) - 2;
            CurrentLine = HistoryLines - (%ELEM(Line) - 2) + 1;
@@ -161,7 +196,5 @@
        ENDIF;
 
        RETURN;
-
-      /END-FREE
 
      P FindBottom      E

@@ -42,7 +42,7 @@ advent.rpgle:
 
 advent.pgm:
 	liblist -a $(BIN_LIB);\
-	system "CRTPGM PGM($(BIN_LIB)/$*) ENTMOD(ADVENT) MODULE(ADVENT ADVENT_D) TEXT('$(NAME)') REPLACE(*YES) TGTRLS($(TGTRLS))"
+	system "CRTPGM PGM($(BIN_LIB)/ADVENT) ENTMOD(ADVENT) MODULE(ADVENT ADVENT_D) TEXT('$(NAME)') REPLACE(*YES) ACTGRP(*NEW) TGTRLS($(TGTRLS))"
 	@touch $@
 	
 #----------

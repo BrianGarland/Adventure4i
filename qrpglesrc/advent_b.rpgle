@@ -182,16 +182,76 @@
                IT INT(10) CONST;
            END-PI;
 
+           DCL-S MSG CHAR(1024);
+
+
            KKT = RTEXT(IT);
            IF KKT = 0;
                RETURN;
            ENDIF;
 
-           MSG =LLINE(KKT);
-           DSPLY MSG DUMMY;
+           MSG = LLINE(KKT);
+           TYPE(MSG);
 
            RETURN;
 
        END-PROC;
+
+
+
+       // GETIN -- Replace the GETIN function
+       DCL-PROC GETIN;
+           DCL-PI *N;
+               TWOW INT(10);
+               B    INT(10);
+               C    INT(10);
+               D    INT(10);
+           END-PI;
+
+           DCL-S INPUT CHAR(80); 
+
+
+           INPUT = ACCEPT();
+
+           RETURN;
+
+       END-PROC;
+
+
+
+       // YES -- Replace the YES function
+       DCL-PROC YES;
+           DCL-PI *N;
+               X    INT(10) CONST;
+               Y    INT(10) CONST;
+               Z    INT(10) CONST;
+               YEA  INT(10);
+           END-PI;
+
+           DCL-S IA1  INT(10);
+           DCL-S IB1  INT(10);
+           DCL-S JUNK INT(10);
+
+
+           SPEAK(X);
+           GETIN(JUNK:IA1:JUNK:IB1);
+
+           IF (IA1 = 0); 
+               YEA = 0;
+               IF Z <> 0;
+                   SPEAK(Z);
+               ENDIF;
+           ELSE;
+               YEA = 1;
+               IF Y <> 0;
+                   SPEAK(Y);
+               ENDIF;
+           ENDIF;        
+
+           RETURN;
+
+       END-PROC;
+
+
 
 

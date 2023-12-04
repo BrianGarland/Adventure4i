@@ -1,4 +1,4 @@
-     H DFTACTGRP(*NO) ACTGRP(*NEW)                  
+      //H DFTACTGRP(*NO) ACTGRP(*NEW)                  
 
      D TYPE            PR
      D  Message                    1024A   CONST

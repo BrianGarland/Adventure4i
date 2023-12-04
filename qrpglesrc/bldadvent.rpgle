@@ -202,13 +202,19 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     ENDIF;
                 ENDIF;
                 IF tab <> 0;
-                    tag = 'TAG' + %SUBST(BUFFER:1:tab-1);
-                    CLEAR SourceLine;
-                    SourceLine.Line = line#;
-                    SourceLine.spec = 'C';
-                    SourceLine.factor1 = tag;
-                    SourceLine.opcode = 'TAG';
-                    WriteLine(SourceLine);
+                    IF SkipSection AND %SUBST(BUFFER:1:tab-1) <> '1100';
+                        SourceLine.Comment = '*';
+                        SourceLine.Text = '==== ' + Buffer;
+                        WriteLine(SourceLine);
+                    ELSE;
+                        tag = 'TAG' + %SUBST(BUFFER:1:tab-1);
+                        CLEAR SourceLine;
+                        SourceLine.Line = line#;
+                        SourceLine.spec = 'C';
+                        SourceLine.factor1 = tag;
+                        SourceLine.opcode = 'TAG';
+                        WriteLine(SourceLine);
+                    ENDIF;    
                     IF %SUBST(BUFFER:1:tab-1) = '1002';
                         // start reading .dat file
                         SkipSection = TRUE;
@@ -266,7 +272,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                         SourceLine.opcode = 'SELECT';
                         WriteLine(SourceLine);
 
-                               // < 0 option
+                        // < 0 option
                         CLEAR SourceLine;
                         SourceLine.Line = line#;
                         SourceLine.spec = 'C';
@@ -284,7 +290,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                                                                      END-Start);
                         WriteLine(SourceLine);
 
-                               // = 0 option
+                        // = 0 option
                         CLEAR SourceLine;
                         SourceLine.Line = line#;
                         SourceLine.spec = 'C';
@@ -303,7 +309,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                         Start = End + 1;
                         WriteLine(SourceLine);
 
-                               // > 0 option
+                        // > 0 option
                         CLEAR SourceLine;
                         SourceLine.Line = line#;
                         SourceLine.spec = 'C';
@@ -523,9 +529,11 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 ELSE;
                     FunctionName = %SUBST(Buffer:13);
                 ENDIF;
+                // All subroutines are rewritten by hand
                 IF (FunctionName = 'SPEAK'
-                                    OR FunctionName = 'GETIN'
-                                    OR FunctionName = 'SHIFT');
+                        OR FunctionName = 'GETIN'
+                        OR FunctionName = 'YES'
+                        OR FunctionName = 'SHIFT');
                     SkipSection = TRUE;
                     SourceLine.Line = line#;
                     SourceLine.Comment = '*';
