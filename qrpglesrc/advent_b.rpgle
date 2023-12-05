@@ -203,15 +203,27 @@
        DCL-PROC GETIN;
            DCL-PI *N;
                TWOW INT(10);
-               B    INT(10);
-               C    INT(10);
-               D    INT(10);
+               B    CHAR(5);
+               C    CHAR(5);
+               D    CHAR(5);
            END-PI;
 
-           DCL-S INPUT CHAR(80); 
+           DCL-S Array CHAR(80) DIM(12);
+           DCL-S Input CHAR(80); 
+           DCL-S Text  CHAR(80);
 
 
-           INPUT = ACCEPT();
+           TWOW = 0;
+           Input = ACCEPT();
+
+           Array = Split(Input:Text);
+
+           B = %SUBST(Array(1):1:5);
+           C = %SUBST(Array(1):6);
+           D = %SUBST(Array(2):1:5); 
+           IF D <> *BLANKS;
+               TWOW = 1;
+           ENDIF;    
 
            RETURN;
 
@@ -228,15 +240,16 @@
                YEA  INT(10);
            END-PI;
 
-           DCL-S IA1  INT(10);
-           DCL-S IB1  INT(10);
-           DCL-S JUNK INT(10);
+           DCL-S IA1   CHAR(10);
+           DCL-S IB1   CHAR(10);
+           DCL-S JUNK1 INT(10);
+           DCL-S JUNK2 CHAR(10);
 
 
            SPEAK(X);
-           GETIN(JUNK:IA1:JUNK:IB1);
+           GETIN(JUNK1:IA1:JUNK2:IB1);
 
-           IF (IA1 = 0); 
+           IF (IA1 = 'NO' OR IA1 = 'N'); 
                YEA = 0;
                IF Z <> 0;
                    SPEAK(Z);

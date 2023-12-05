@@ -86,6 +86,7 @@
                Buffer = %SUBST(WorkMsg:1:End);
                WorkMsg = %TRIM(%SUBST(WorkMsg:End+1));
            ENDSL;
+           CurrentLine += 1;
            HistoryLines += 1;
            History(HistoryLines) = Buffer;
        ENDDO;
@@ -178,6 +179,12 @@
             sln = Offset;
         ENDIF;
 
+        IF sln > 0;              
+            WRITE S1;            
+        ENDIF;                   
+
+        RETURN;
+        
      P ShowScreen      E
 
 

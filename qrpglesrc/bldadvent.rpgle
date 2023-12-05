@@ -60,6 +60,7 @@ DCL-S InFunc         IND;
 DCL-S Len            INT(10);
 DCL-S Line#          ZONED(5:0);
 DCL-S mode           UNS(10);
+DCL-S Number         CHAR(10);
 DCL-S oflag          INT(10);
 DCL-S Paren          INT(10);
 DCL-S path           CHAR(512);
@@ -76,6 +77,8 @@ DCL-S Temp           CHAR(4) INZ;
 DCL-S TestParm       CHAR(40);
 DCL-S Token          CHAR(4) DIM(10) INZ;
 DCL-S Type           CHAR(1);
+DCL-S TypeCode       CHAR(10);
+DCL-S TypeVars       CHAR(80);
 DCL-S Var            CHAR(14);
 DCL-S Vars           CHAR(14) DIM(50);
 DCL-S ZEROS          CHAR(5) INZ('00000');
@@ -200,14 +203,15 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                         %SUBST(Buffer:6:1) = x'05';
                         tab = 6;
                     ENDIF;
+                    Number = %SUBST(Buffer:1:tab-1);
                 ENDIF;
                 IF tab <> 0;
-                    IF SkipSection AND %SUBST(BUFFER:1:tab-1) <> '1100';
+                    IF SkipSection AND Number <> '1100';
                         SourceLine.Comment = '*';
                         SourceLine.Text = '==== ' + Buffer;
                         WriteLine(SourceLine);
                     ELSE;
-                        tag = 'TAG' + %SUBST(BUFFER:1:tab-1);
+                        tag = 'TAG' + Number;
                         CLEAR SourceLine;
                         SourceLine.Line = line#;
                         SourceLine.spec = 'C';
@@ -215,11 +219,11 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                         SourceLine.opcode = 'TAG';
                         WriteLine(SourceLine);
                     ENDIF;    
-                    IF %SUBST(BUFFER:1:tab-1) = '1002';
+                    IF Number = '1002';
                         // start reading .dat file
                         SkipSection = TRUE;
                     ENDIF;
-                    IF %SUBST(BUFFER:1:tab-1) = '1100';
+                    IF Number = '1100';
                         // done reading .dat file
                         SkipSection = FALSE;
                     ENDIF;
@@ -372,17 +376,10 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 CLEAR SourceLine;
                 SourceLine.Line = line#;
                 SourceLine.spec = 'C';
-                // just comment out calls to SHIFT and GETIN for now
-                IF %SCAN('SHIFT(':Buffer) > 0 OR %SCAN('GETIN(':Buffer) > 0;
-                    SourceLine.Comment = '*';
-                    SourceLine.Text = '==== ' + Buffer;
-                    WriteLine(SourceLine);
-                ELSE;
-                    SourceLine.opcode = 'CALLP';
-                    Statement = %SUBST(Buffer:7);
-                    FullReplace(',':':':1:Statement);
-                    SplitStatement(Statement);
-                ENDIF;
+                SourceLine.opcode = 'CALLP';
+                Statement = %SUBST(Buffer:7);
+                FullReplace(',':':':1:Statement);
+                SplitStatement(Statement);
                 Buffer = '';
                 EXSR CheckForEnd;
 
@@ -689,9 +686,8 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 CLEAR SourceLine;
                 SourceLine.line = line#;
                 SourceLine.spec = 'C';
-                SourceLine.factor1 = 'MSG';
-                SourceLine.opcode = 'DSPLY';
-                SourceLine.result = 'DUMMY';
+                SourceLine.opcode = 'CALLP';
+                SourceLine.result = 'TYPE(MSG)';
                 WriteLine(SourceLine);
                 Buffer = '';
 
@@ -863,6 +859,39 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 ENDFOR;
                 Buffer = '';
 
+            // TYPE
+            WHEN %SUBST(Buffer:1:6) = x'05' + 'TYPE ';
+                CLEAR SourceLine;
+                SourceLine.Line = line#;
+                SourceLine.Comment = '*';
+                SourceLine.Text = '==== ' + Buffer;
+                WriteLine(SourceLine);
+                Buffer = '';
+                TypeCode = %SUBST(Buffer:7);
+                TypeVars = '';
+                Pos = %SCAN(',':TypeCode);
+                IF Pos > 0;
+                    TypeCode = %SUBST(TypeCode:1:Pos-1);
+                    TypeVars = %SUBST(TypeCode:Pos+1);
+                ENDIF;  
+                  
+            WHEN %SUBST(Buffer:1:8) = x'05' + 'FORMAT(';
+                IF %TRIM(Number) = %TRIM(TypeCode);
+                    SourceLine.Comment = '*';
+                    SourceLine.Text = '==== ' + Buffer;
+                    WriteLine(SourceLine);
+                    SourceLine.Comment = '*';
+                    SourceLine.Text = '==== TypeCode = ' + TypeCode
+                                    + ', TypeVars = ' + TypeVars;
+                    WriteLine(SourceLine);
+
+                    // TODO:   actually write the code! 
+
+                    Number = *BLANKS;
+                    TypeCode = *BLANKS;
+                    TypeVars = *BLANKS;
+                ENDIF;
+
             // just ignore these commands
             WHEN %SUBST(Buffer:1:10) = x'05' + 'IMPLICIT ' OR
                         %SUBST(Buffer:1:8) = x'05' + 'COMMON ';
@@ -873,9 +902,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
             WHEN %SUBST(Buffer:1:6) = x'05' + 'READ(' OR
                         %SUBST(Buffer:1:7) = x'05' + 'WRITE(' OR
                         %SUBST(Buffer:1:6) = x'05' + 'DATA ' OR
-                        %SUBST(Buffer:1:8) = x'05' + 'FORMAT(' OR
-                        %SUBST(Buffer:1:8) = x'05' + 'ACCEPT ' OR
-                        %SUBST(Buffer:1:6) = x'05' + 'TYPE ';
+                        %SUBST(Buffer:1:8) = x'05' + 'ACCEPT ';
                 CLEAR SourceLine;
                 SourceLine.Line = line#;
                 SourceLine.Comment = '*';

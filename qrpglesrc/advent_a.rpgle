@@ -79,7 +79,6 @@
      D SNAKE           S             10I 0
      D STICK           S             10I 0
      D TEMP            S             10I 0
-     D TWOW            S             10I 0
      D TWOWDS          S             10I 0
      D VAL             S             10I 0
      D WATER           S             10I 0
