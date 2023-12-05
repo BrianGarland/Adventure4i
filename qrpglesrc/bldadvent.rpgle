@@ -891,6 +891,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     TypeCode = *BLANKS;
                     TypeVars = *BLANKS;
                 ENDIF;
+                Buffer = '';
 
             // just ignore these commands
             WHEN %SUBST(Buffer:1:10) = x'05' + 'IMPLICIT ' OR
