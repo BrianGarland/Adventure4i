@@ -182,8 +182,9 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                            + %SUBST(Buffer:C);
                 ELSE;
                     Buffer = %SUBST(Buffer:1:B-1)
-                           + %SUBST(Buffer:C:D-C+1)
-                           + '''' + %SUBST(Buffer:D);
+                           + %SUBST(Buffer:C:D-C)
+                           + '''''' 
+                           + %SUBST(Buffer:D+1);
                 ENDIF;           
                 Adjusted = TRUE;
 
