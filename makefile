@@ -6,12 +6,13 @@ SHELL=/QOpenSys/usr/bin/qsh
 
 #----------
 
+#all: adventfm.dspf bldadvent.rpgle
 all: adventfm.dspf advent.pgm
 	@echo "Built all"
 
 advent.pgm: bldadvent.rpgle adventfm.dspf advent_d.rpgle advent.rpgle
 advent.rpgle: bldadvent.rpgle
-advent_d.rpgle: adventfm.dspf
+#advent_d.rpgle: adventfm.dspf
 
 #----------
 

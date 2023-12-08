@@ -45,6 +45,7 @@ DCL-S BufferLen      INT(10);
 DCL-S Buffer2        CHAR(25000) CCSID(819);
 DCL-S C              INT(10);
 DCL-S Count          INT(10);
+DCL-S D              INT(10);
 DCL-S Dims           CHAR(10) DIM(50);
 DCL-S End            INT(10);
 DCL-S EndforNeeded   IND;
@@ -78,6 +79,7 @@ DCL-S TestParm       CHAR(40);
 DCL-S Token          CHAR(4) DIM(10) INZ;
 DCL-S Type           CHAR(1);
 DCL-S TypeCode       CHAR(10);
+DCL-S TypeFormat     CHAR(80);
 DCL-S TypeVars       CHAR(80);
 DCL-S Var            CHAR(14);
 DCL-S Vars           CHAR(14) DIM(50);
@@ -167,20 +169,6 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 WriteLine(SourceLine);
                 Buffer = '';
 
-            // Unconvertable statement
-            // Contains =" or ." or (" or lline
-            WHEN %SCAN('="':Buffer) > 0
-                       OR %SCAN('."':Buffer) > 0
-                       OR %SCAN('("':Buffer) > 0
-                       OR (%SUBST(Buffer:1:11) <> x'05' + 'DIMENSION '
-                            AND %SCAN('LLINE(':Buffer) > 0);
-                CLEAR SourceLine;
-                SourceLine.Line = line#;
-                SourceLine.Comment = '*';
-                SourceLine.Text = '==== ' + Buffer;
-                WriteLine(SourceLine);
-                Buffer = '';
-
             // Adjust buffer for LLINE
             WHEN (%SUBST(Buffer:1:11) <> x'05' + 'DIMENSION '
                             AND %SCAN('LLINE(':Buffer) > 0)
@@ -188,9 +176,15 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 A = %SCAN('LLINE(':Buffer);
                 B = %SCAN(',':Buffer:A);
                 C = %SCAN(')':Buffer:B);
-                Buffer = %SUBST(Buffer:1:B-1)
-                              + ').LINE('
-                              + %SUBST(Buffer:B+1);
+                D = %SCAN('0':Buffer:C);
+                IF D = 0;
+                    Buffer = %SUBST(Buffer:1:B-1)
+                           + %SUBST(Buffer:C);
+                ELSE;
+                    Buffer = %SUBST(Buffer:1:B-1)
+                           + %SUBST(Buffer:C:D-C+1)
+                           + '''' + %SUBST(Buffer:D);
+                ENDIF;           
                 Adjusted = TRUE;
 
             // number = convert to tag and split line
@@ -203,9 +197,9 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                         %SUBST(Buffer:6:1) = x'05';
                         tab = 6;
                     ENDIF;
-                    Number = %SUBST(Buffer:1:tab-1);
                 ENDIF;
                 IF tab <> 0;
+                    Number = %SUBST(Buffer:1:tab-1);
                     IF SkipSection AND Number <> '1100';
                         SourceLine.Comment = '*';
                         SourceLine.Text = '==== ' + Buffer;
@@ -687,7 +681,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 SourceLine.line = line#;
                 SourceLine.spec = 'C';
                 SourceLine.opcode = 'CALLP';
-                SourceLine.result = 'TYPE(MSG)';
+                SourceLine.ExtFactor2 = 'TYPE(MSG)';
                 WriteLine(SourceLine);
                 Buffer = '';
 
@@ -866,17 +860,19 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 SourceLine.Comment = '*';
                 SourceLine.Text = '==== ' + Buffer;
                 WriteLine(SourceLine);
-                Buffer = '';
-                TypeCode = %SUBST(Buffer:7);
-                TypeVars = '';
-                Pos = %SCAN(',':TypeCode);
+                TypeVars = %SUBST(Buffer:7);
+                TypeCode = '';
+                Pos = %SCAN(',':TypeVars);
                 IF Pos > 0;
-                    TypeCode = %SUBST(TypeCode:1:Pos-1);
-                    TypeVars = %SUBST(TypeCode:Pos+1);
+                    TypeCode = %SUBST(TypeVars:1:Pos-1);
+                    TypeVars = %SUBST(TypeVars:Pos+1);
                 ENDIF;  
+                Buffer = '';
                   
+            // FORMAT       
             WHEN %SUBST(Buffer:1:8) = x'05' + 'FORMAT(';
                 IF %TRIM(Number) = %TRIM(TypeCode);
+                    CLEAR SourceLine;                
                     SourceLine.Comment = '*';
                     SourceLine.Text = '==== ' + Buffer;
                     WriteLine(SourceLine);
@@ -884,10 +880,16 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     SourceLine.Text = '==== TypeCode = ' + TypeCode
                                     + ', TypeVars = ' + TypeVars;
                     WriteLine(SourceLine);
+                    TypeFormat = %SUBST(Buffer:8);
 
                     // TODO:   actually write the code! 
 
-                    Number = *BLANKS;
+                    IF %SUBST(TypeFormat:2:1) = '''';
+                        // some kind of constant
+                    ELSE;
+                    ENDIF;
+
+                    TypeFormat = *BLANKS;
                     TypeCode = *BLANKS;
                     TypeVars = *BLANKS;
                 ENDIF;
