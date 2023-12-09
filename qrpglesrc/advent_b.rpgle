@@ -190,7 +190,7 @@
                IT INT(10) CONST;
            END-PI;
 
-           DCL-S MSG CHAR(1024);
+           DCL-S MSG CHAR(2500);
 
 
            KKT = RTEXT(IT);
