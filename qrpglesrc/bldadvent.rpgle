@@ -81,6 +81,7 @@ DCL-S C              INT(10);
 DCL-S Count          INT(10);
 DCL-S D              INT(10);
 DCL-S Dims           CHAR(10) DIM(50);
+DCL-S DoneReading    IND;
 DCL-S End            INT(10);
 DCL-S EndforNeeded   IND;
 DCL-S EndforTag      CHAR(14);
@@ -234,7 +235,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 ENDIF;
                 IF tab <> 0;
                     Number = %SUBST(Buffer:1:tab-1);
-                    IF SkipSection AND Number <> '1100';
+                    IF SkipSection AND Number <> '1100' AND Number <> '6';
                         SourceLine.Comment = '*';
                         SourceLine.Text = '==== ' + Buffer;
                         WriteLine(SourceLine);
@@ -253,6 +254,9 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     ENDIF;
                     IF Number = '1100';
                         // done reading .dat file
+                        SkipSection = FALSE;
+                    ENDIF;
+                    IF Number = '6';
                         SkipSection = FALSE;
                     ENDIF;
                 ELSE;
@@ -533,134 +537,8 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
 
             // SUBROUTINE
             WHEN %SUBST(Buffer:1:12) = x'05' + 'SUBROUTINE ';
-                Paren = %SCAN('(':Buffer:13);
-                CLEAR Vars;
-                Count = 0;
-                IF Paren <> 0;
-                    FunctionName = %SUBST(Buffer:13:Paren-13);
-                    Start = Paren + 1;
-                    DOW 1=1;
-                        End = %SCAN(',':Buffer:Start);
-                        IF End = 0;
-                            LEAVE;
-                        ENDIF;
-                        Count = Count + 1;
-                        Vars(Count) = %SUBST(Buffer:Start:END-Start);
-                        Start = End + 1;
-                    ENDDO;
-                    Count = Count + 1;
-                    End = %SCAN(')':Buffer:Start);
-                    Vars(Count) = %SUBST(Buffer:Start:END-Start);
-                ELSE;
-                    FunctionName = %SUBST(Buffer:13);
-                ENDIF;
-                // All subroutines are rewritten by hand
-                IF (FunctionName = 'SPEAK'
-                        OR FunctionName = 'GETIN'
-                        OR FunctionName = 'YES'
-                        OR FunctionName = 'SHIFT');
-                    SkipSection = TRUE;
-                    SourceLine.Line = line#;
-                    SourceLine.Comment = '*';
-                    SourceLine.Text = '==== ' + Buffer;
-                    WriteLine(SourceLine);
-                    Buffer = '';
-                ELSE;
-                    SkipSection = FALSE;
-                    CLEAR SourceLine;
-                    SourceLine.line = line#;
-                    SourceLine.spec = 'P';
-                    SourceLine.functionName = ' ' + FunctionName;
-                    SourceLine.functionBeginEnd = 'B';
-                    WriteLine(SourceLine);
-                    CLEAR SourceLine;
-                    SourceLine.line = line#;
-                    SourceLine.spec = 'D';
-                    SourceLine.varName = ' ' + FunctionName;
-                    SourceLine.varType = 'PI';
-                    WriteLine(SourceLine);
-                    FOR I = 1 TO Count;
-                        CLEAR SourceLine;
-                        SourceLine.Line = Line#;
-                        SourceLine.spec = 'D';
-                        SourceLine.varName = '  ' + Vars(i);
-                        IF FunctionName = 'GETIN' AND I >= 2;
-                            SourceLine.varSize = 5;
-                            SourceLine.varDataType = 'A';
-                            SourceLine.varDecPos = *BLANKS;
-                        ELSE;
-                            SourceLine.varSize = 10;
-                            SourceLine.varDataType = 'I';
-                            SourceLine.varDecPos = '00';
-                        ENDIF;
-                        SourceLine.varKeywords = 'VALUE';
-                        WriteLine(SourceLine);
-                    ENDFOR;
-                ENDIF;    
+                DoneReading = TRUE;
                 Buffer = '';
-                EXSR CheckForEnd;
-                InFunc = TRUE;
-
-
-            // LOGICAL FUNCTION
-            WHEN %SUBST(Buffer:1:17) = x'05' + 'LOGICAL FUNCTION';
-                Paren = %SCAN('(':Buffer:18);
-                IF Paren <> 0;
-                    FunctionName = %SUBST(Buffer:18:Paren-18);
-                ELSE;
-                    FunctionName = %SUBST(Buffer:18);
-                ENDIF;
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'P';
-                SourceLine.functionName = ' ' + FunctionName;
-                SourceLine.functionBeginEnd = 'B';
-                WriteLine(SourceLine);
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'D';
-                SourceLine.varName = ' ' + FunctionName;
-                SourceLine.varType = 'PI';
-                SourceLine.varDataType = 'N';
-                WriteLine(SourceLine);
-                CLEAR SourceLine;
-                SourceLine.Line = line#;
-                SourceLine.Comment = '*';
-                SourceLine.Text = '==== ' + Buffer;
-                WriteLine(SourceLine);
-                Buffer = '';
-                EXSR CheckForEnd;
-
-            // INTEGER FUNCTION
-            WHEN %SUBST(Buffer:1:17) = x'05' + 'INTEGER FUNCTION';
-                Paren = %SCAN('(':Buffer:18);
-                IF Paren <> 0;
-                    FunctionName = %SUBST(Buffer:18:Paren-18);
-                ELSE;
-                    FunctionName = %SUBST(Buffer:18);
-                ENDIF;
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'P';
-                SourceLine.functionName = ' ' + FunctionName;
-                SourceLine.functionBeginEnd = 'B';
-                WriteLine(SourceLine);
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'D';
-                SourceLine.varName = ' ' + FunctionName;
-                SourceLine.varType = 'PI';
-                SourceLine.varSize = 10;
-                SourceLine.varDataType = 'I';
-                SourceLine.varDecPos = '00';
-                WriteLine(SourceLine);
-                CLEAR SourceLine;
-                SourceLine.Line = line#;
-                SourceLine.Comment = '*';
-                SourceLine.Text = '==== ' + Buffer;
-                WriteLine(SourceLine);
-                Buffer = '';
-                EXSR CheckForEnd;
 
             // END
             WHEN %SUBST(Buffer:1:5) = x'05' + 'END ';
@@ -751,7 +629,7 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                             SourceLine.varType = 'S';
                             SELECT;
                                 WHEN vars(i) = 'LLINE';
-                                    SourceLine.varSize = 256;
+                                    SourceLine.varSize = 2500;
                                     SourceLine.varDataType = 'A';
                                     A = %SCAN(',':Dims(i));
                                     SourceLine.varKeywords = 'DIM('
@@ -805,32 +683,8 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 Buffer = '';
 
             // REAL
-            // Skip REAL because it is only used for RAN which is a function?
             WHEN  %SUBST(Buffer:1:6) = x'05' + 'REAL ';
-                //CLEAR Vars;
-                //Start = 7;
-                //Count = 0;
-                //DOW 1=1;
-                //    End = %SCAN(',':Buffer:Start);
-                //    IF End = 0;
-                //        LEAVE;
-                //    ENDIF;
-                //    Count = Count + 1;
-                //    Vars(Count) = %SUBST(Buffer:Start:END-Start);
-                //    Start = End + 1;
-                //ENDDO;
-                //Count = Count + 1;
-                //Vars(Count) = %SUBST(Buffer:Start);
-                //FOR I = 1 TO Count;
-                //    CLEAR SourceLine;
-                //    SourceLine.Line = Line#;
-                //    SourceLine.spec = 'D';
-                //    SourceLine.varName = ' ' + Vars(i);
-                //    SourceLine.varType = 'S';
-                //    SourceLine.varSize = 4;
-                //    SourceLine.varDataType = 'F';
-                //    WriteLine(SourceLine);
-                //ENDFOR;
+                // Skip REAL because it is only used for RAN which is a function?
                 Buffer = '';
 
             // LOGICAL
@@ -937,6 +791,9 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     TypeVars = *BLANKS;
                 ENDIF;
                 Buffer = '';
+                IF Number = '5';
+                    SkipSection = TRUE;
+                ENDIF;
 
             // just ignore these commands
             WHEN %SUBST(Buffer:1:10) = x'05' + 'IMPLICIT ' OR
@@ -990,6 +847,10 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
 
         BufferLen = %LEN(%TRIMR(Buffer));
     ENDDO;
+
+    IF DoneReading;
+        LEAVE;
+    ENDIF;
 
 ENDDO;
 

@@ -47,7 +47,7 @@
      D  Line                               LIKE(Line01) DIM(24)
      D                                     OVERLAY(LineDS:1)
 
-     D CurrentLine     S              5I 0
+     D CurrentLine     S              5I 0 INZ(1)
      D History         S                   LIKE(Line01) DIM(10000)
      D HistoryLines    S              5U 0 INZ(0)
 
@@ -56,12 +56,12 @@
      P TYPE            B                   EXPORT
       //------------------------------------------------------------------------------------------   
      D TYPE            PI
-     D  Message                    1024A   CONST
+     D  Message                    2500A   CONST
 
      D Buffer          S                   LIKE(LINE01)
      D BufferSize      S             10I 0 INZ(%SIZE(LINE01))
      D End             S             10I 0
-     D WorkMsg         S           1024A   VARYING
+     D WorkMsg         S           2500A   VARYING
 
        IF NOT(%OPEN(ADVENTFM));
            OPEN ADVENTFM;
@@ -80,16 +80,17 @@
                WorkMsg = %TRIM(%SUBST(WorkMsg:BufferSize+1));
            OTHER;
                End = BufferSize;
-               DOW %SUBST(Buffer:End:1) <> *BLANK;
+               DOW %SUBST(WorkMsg:End:1) <> *BLANK;
                    End -= 1;
                ENDDO;
                Buffer = %SUBST(WorkMsg:1:End);
                WorkMsg = %TRIM(%SUBST(WorkMsg:End+1));
            ENDSL;
-           CurrentLine += 1;
            HistoryLines += 1;
            History(HistoryLines) = Buffer;
        ENDDO;
+
+       FindBottom();
 
        RETURN;
 

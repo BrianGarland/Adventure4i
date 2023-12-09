@@ -1,7 +1,7 @@
       //H DFTACTGRP(*NO) ACTGRP(*NEW)                  
 
      D TYPE            PR
-     D  Message                    1024A   CONST
+     D  Message                    2500A   CONST
 
      D ACCEPT          PR            80A
 

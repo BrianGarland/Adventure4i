@@ -85,12 +85,12 @@
                    ITER;
                ENDIF;
 
-               IF ikind in %LIST(1:2:5:6);
+               IF ikind IN %LIST(1:2:5:6);
                    lline(I) = %TRIM(Text);
                ENDIF;
                jKind = %DEC(Array(1):4:0);
 
-               IF ikind in %LIST(1:6)
+               IF ikind IN %LIST(1:6)
                    AND ikind = xikind
                    AND jKind = xjkind;
                    lline(i-1) = %TRIMR(lline(i-1)) + ' ' + %TRIM(Text);
@@ -98,13 +98,19 @@
                    xjkind = jkind;
                    ITER;
                ENDIF;
+               xikind = ikind;
+               xjkind = jkind;
 
                SELECT;
                    WHEN ikind = 1;
-                       ltext(jkind) = I;
+                       IF ltext(jkind) = 0; 
+                           ltext(jkind) = I;
+                       ENDIF;
                        I += 1;
                    WHEN ikind = 2;
-                       stext(jkind) = I;
+                       IF stext(jkind) = 0;
+                           stext(jkind) = I;
+                       ENDIF; 
                        I += 1;
                    WHEN ikind = 3;
                        lKind = %DEC(Array(2):4:0);
@@ -129,7 +135,9 @@
                        ENDIF;
                        I += 1;
                    WHEN ikind = 6;
-                       rtext(jkind) = I;
+                       IF rtext(jkind) = 0;
+                           rtext(jkind) = I;
+                       ENDIF;
                        I += 1;
                ENDSL;
 
