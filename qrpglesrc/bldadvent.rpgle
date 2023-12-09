@@ -32,6 +32,40 @@ DCL-DS SourceLine LEN(256) QUALIFIED;
     entry            CHAR(80)   POS(1);
 END-DS;
 
+DCL-DS NumberDS;
+    *N CHAR(10) INZ('5');
+    *N CHAR(10) INZ('6');
+    *N CHAR(10) INZ('67');
+    *N CHAR(10) INZ('68');
+    *N CHAR(10) INZ('78');
+    *N CHAR(10) INZ('2006');
+    *N CHAR(10) INZ('2007');
+    *N CHAR(10) INZ('5001');
+    *N CHAR(10) INZ('5005');
+    *N CHAR(10) INZ('5063');
+    *N CHAR(10) INZ('5315');
+    *N CHAR(10) INZ('2317');
+    *N CHAR(10) INZ('5334');
+    Numbers CHAR(10) DIM(13) POS(1);
+END-DS;
+
+DCL-DS FormatDS;
+    *N CHAR(100) INZ('TYPE(LLINE(KK));');
+    *N CHAR(100) INZ('TYPE('' '');');
+    *N CHAR(100) INZ('TYPE('' THERE ARE '' + %CHAR(DTOT) + '' THREATENING LITTLE DWARVES IN THE ROOM WITH YOU.'');');
+    *N CHAR(100) INZ('TYPE('' '' + %CHAR(STICK) + '' OF THEM GET YOU.'');');
+    *N CHAR(100) INZ('TYPE('' '' + %CHAR(ATTACK) + '' OF THEM THROW KNIVES AT YOU!'');');
+    *N CHAR(100) INZ('TYPE(LLINE(KK));');
+    *N CHAR(100) INZ('TYPE('' '');');
+    *N CHAR(100) INZ('TYPE('' WHAT DO YOU WANT TO DO WITH THE '' + %TRIM(A) + ''?'');');
+    *N CHAR(100) INZ('TYPE('' I SEE NO '' + %TRIM(A) + '' HERE.'');');
+    *N CHAR(100) INZ('TYPE(''  '' + %TRIM(A) + '' WHAT?'');');
+    *N CHAR(100) INZ('TYPE('' WHAT DO YOU WANT TO DO WITH THE '' + %TRIM(A) + '' '' + %TRIM(B) + ''?'');');
+    *N CHAR(100) INZ('TYPE('' I SEE NO '' + %TRIM(A) + '' '' + %TRIM(B) + '' HERE.'');');
+    *N CHAR(100) INZ('TYPE('' '' + %TRIM(A) + '' '' + %TRIM(B) + '' WHAT?'');');
+    Formats CHAR(100) DIM(13) POS(1);
+END-DS;
+
 DCL-S A              INT(10);
 DCL-S Advent         INT(10);
 DCL-S Advent_A       INT(10);
@@ -79,7 +113,6 @@ DCL-S TestParm       CHAR(40);
 DCL-S Token          CHAR(4) DIM(10) INZ;
 DCL-S Type           CHAR(1);
 DCL-S TypeCode       CHAR(10);
-DCL-S TypeFormat     CHAR(80);
 DCL-S TypeVars       CHAR(80);
 DCL-S Var            CHAR(14);
 DCL-S Vars           CHAR(14) DIM(50);
@@ -881,16 +914,25 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                     SourceLine.Text = '==== TypeCode = ' + TypeCode
                                     + ', TypeVars = ' + TypeVars;
                     WriteLine(SourceLine);
-                    TypeFormat = %SUBST(Buffer:8);
 
-                    // TODO:   actually write the code! 
-
-                    IF %SUBST(TypeFormat:2:1) = '''';
-                        // some kind of constant
-                    ELSE;
+                    a = %LOOKUP(Number:Numbers);
+                    IF a > 0;
+                        CLEAR SourceLine;                
+                        IF %LEN(%TRIMR(Formats(a))) > 70;         
+                            b = 70;
+                            DOW %SUBST(Formats(a):b:1) <> '+';               
+                                b -= 1;
+                            ENDDO;
+                            SourceLine.cntlEntry = ' ' + %SUBST(Formats(a):1:b);
+                            WriteLine(SourceLine);
+                            SourceLine.cntlEntry = ' ' + %SUBST(Formats(a):b+1);
+                            WriteLine(SourceLine);
+                        ELSE;
+                            SourceLine.cntlEntry = ' ' + Formats(a);
+                            WriteLine(SourceLine);
+                        ENDIF;
                     ENDIF;
 
-                    TypeFormat = *BLANKS;
                     TypeCode = *BLANKS;
                     TypeVars = *BLANKS;
                 ENDIF;
@@ -1258,4 +1300,3 @@ DCL-PROC SplitStatement;
     RETURN;
 
 END-PROC;
-
