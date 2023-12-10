@@ -42,9 +42,9 @@
      D  Line20
      D  Line21
      D  Line22
-     D  Line23
-     D  Line24
-     D  Line                               LIKE(Line01) DIM(24)
+     D**Line23
+     D**Line24
+     D  Line                               LIKE(Line01) DIM(22)
      D                                     OVERLAY(LineDS:1)
 
      D CurrentLine     S              5I 0 INZ(1)
@@ -169,7 +169,6 @@
         IF CurrentLine > 0;
             FOR i = CurrentLine TO HistoryLines;
                 IF j >= %ELEM(Line);
-                    sln = 0;
                     LEAVE;
                 ENDIF;
                 j += 1;

@@ -12,7 +12,7 @@
      A                                      CLRL(*ALL)
      A                                      CF03
      A                                      CF08
-     A                                      CF09
+     A                                      CF09 
      A                                      CF10
      A                                      CF11
      A                                      CF17
@@ -44,8 +44,8 @@
      A            LINE20       122A  O 21  5
      A            LINE21       122A  O 22  5
      A            LINE22       122A  O 23  5
-     A            LINE23       122A  O 24  5
-     A            LINE24       122A  O 25  5
+     A***         LINE23       122A  O 24  5
+     A***         LINE24       122A  O 25  5
       *
      A                                 27  2 'F3=Exit'                COLOR(BLU)
      A                                    +2 'F17=Top'                COLOR(BLU)
