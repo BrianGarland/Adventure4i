@@ -67,7 +67,7 @@
      A                                      PAGEUP
      A                                      PAGEDOWN
       *
-     A                                  1  1'$'
+     A                                  1  1'>'
      A            INPUT        120A  B  1  3
      A            SLN            2S 0P
       *
