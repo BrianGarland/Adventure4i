@@ -256,6 +256,14 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                         // done reading .dat file
                         SkipSection = FALSE;
                     ENDIF;
+                    IF Number = '2006';
+                        // starting a loop no longer needed
+                        SkipSection = TRUE;
+                    ENDIF;
+                    IF Number = '2007';
+                        // ending a loop no longer needed
+                        SkipSection = FALSE;
+                    ENDIF;
                     IF Number = '6';
                         SkipSection = FALSE;
                     ENDIF;
