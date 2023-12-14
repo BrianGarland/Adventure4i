@@ -256,10 +256,6 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                         // done reading .dat file
                         SkipSection = FALSE;
                     ENDIF;
-                    IF Number = '2006';
-                        // starting a loop no longer needed
-                        SkipSection = TRUE;
-                    ENDIF;
                     IF Number = '2007';
                         // ending a loop no longer needed
                         SkipSection = FALSE;
@@ -591,17 +587,9 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
 
             // PAUSE
             WHEN %SUBST(Buffer:1:7) = x'05' + 'PAUSE ';
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'C';
-                SourceLine.opcode = 'EVAL';
-                SourceLine.ExtFactor2 = 'MSG = ' + %SUBST(Buffer:8);
-                WriteLine(SourceLine);
-                CLEAR SourceLine;
-                SourceLine.line = line#;
-                SourceLine.spec = 'C';
-                SourceLine.opcode = 'CALLP';
-                SourceLine.ExtFactor2 = 'TYPE(MSG)';
+                SourceLine.Line = line#;
+                SourceLine.Comment = '*';
+                SourceLine.Text = '==== ' + Buffer;
                 WriteLine(SourceLine);
                 Buffer = '';
 
@@ -800,6 +788,10 @@ DOW ReadRecord(Advent_F:Buffer:BufferLen:Line#);
                 ENDIF;
                 Buffer = '';
                 IF Number = '5';
+                    SkipSection = TRUE;
+                ENDIF;
+                IF Number = '2006';
+                    // starting a loop no longer needed
                     SkipSection = TRUE;
                 ENDIF;
 

@@ -14,8 +14,6 @@
      D #PAGEUP         C                   X'F4'                                Page Up
      D #PAGEDOWN       C                   X'F5'                                Page Down
 
-     D Offset          C                   2
-
      D DSPFDS          DS
      D  FKey                          1A   OVERLAY(DSPFDS:369)
 
@@ -40,16 +38,12 @@
      D  Line18
      D  Line19
      D  Line20
-     D  Line21
-     D  Line22
-     D**Line23
-     D**Line24
-     D  Line                               LIKE(Line01) DIM(22)
+     D  Line                               LIKE(Line01) DIM(20)
      D                                     OVERLAY(LineDS:1)
 
-     D CurrentLine     S              5I 0 INZ(1)
+     D CurrentLine     S              5S 0 INZ(1)
      D History         S                   LIKE(Line01) DIM(10000)
-     D HistoryLines    S              5U 0 INZ(0)
+     D HistoryLines    S              5S 0 INZ(0)
 
 
       //------------------------------------------------------------------------------------------   
@@ -59,12 +53,13 @@
      D  Message                    2500A   CONST
 
      D Buffer          S                   LIKE(LINE01)
-     D BufferSize      S             10I 0 INZ(%SIZE(LINE01))
-     D End             S             10I 0
+     D BufferSize      S              5S 0 INZ(%SIZE(LINE01))
+     D End             S              5S 0
      D WorkMsg         S           2500A   VARYING
 
        IF NOT(%OPEN(ADVENTFM));
            OPEN ADVENTFM;
+           Title = 'COLOSSAL CAVE ADVENTURE';
        ENDIF;
 
        WorkMsg = %TRIM(Message);
@@ -105,6 +100,7 @@
 
        IF NOT(%OPEN(ADVENTFM));
            OPEN ADVENTFM;
+           Title = 'COLOSSAL CAVE ADVENTURE';
        ENDIF;
 
        Input = *BLANKS;
@@ -112,7 +108,7 @@
        DOW 1=1;
 
            ShowScreen();
-           EXFMT S2;
+           EXFMT S1;
 
            SELECT;
            WHEN FKey = #EXIT;
@@ -160,28 +156,29 @@
       //------------------------------------------------------------------------
      D ShowScreen      PI
 
-     D i               S             10I 0
-     D j               S             10I 0
+     D i               S              5S 0
+     D j               S              5S 0
 
 
-        j = 0;
         CLEAR Line;
+
         IF CurrentLine > 0;
+
+            // Determine first line of the screen
+            j = %ELEM(Line) - HistoryLines;
+            IF j < 0;
+                j = 0;
+            ENDIF;    
+
             FOR i = CurrentLine TO HistoryLines;
                 IF j >= %ELEM(Line);
                     LEAVE;
                 ENDIF;
                 j += 1;
                 Line(j) = History(i);
-                sln = j + Offset;
             ENDFOR;
-        ELSE;
-            sln = Offset;
-        ENDIF;
 
-        IF sln > 0;              
-            WRITE S1;            
-        ENDIF;                   
+        ENDIF;
 
         RETURN;
         
