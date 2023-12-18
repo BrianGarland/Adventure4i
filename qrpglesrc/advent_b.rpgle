@@ -231,10 +231,10 @@
 
            Array = Split(Input:Text);
 
-           B = %SUBST(Array(1):1:5);
-           C = %SUBST(Array(1):6);
-           D = %SUBST(Array(2):1:5); 
-           IF D <> *BLANKS;
+           B = %TRIM(Array(1));
+           C = %TRIM(Array(2)); 
+           D = %TRIM(Array(3)); 
+           IF C <> *BLANKS;
                TWOW = 1;
            ENDIF;    
 
